@@ -18,13 +18,20 @@ app.use('/files', express.static(store.DATA_DIR));
 
 const epDir = ep => path.join(store.DATA_DIR, 'episodes', ep.id);
 const rel = abs => path.relative(store.DATA_DIR, abs).split(path.sep).join('/');
-const wrap = fn => (req, res) => Promise.resolve(fn(req, res)).catch(e => res.status(400).json({ error: e.message }));
+const wrap = fn => (req, res) => Promise.resolve().then(() => fn(req, res)).catch(e => res.status(400).json({ error: e.message }));
 
 // ---------- Series ----------
-app.get('/api/state', (req, res) => res.json({ ...store.db, runner: { running: runner.state.running, current: runner.state.current } }));
+app.get('/api/state', (req, res) => res.json({ ...store.db, queue: pipeline.queue, runner: { running: runner.state.running, current: runner.state.current } }));
+
+// 1 drama = 1 akun Google: akun yang dipilih harus ada.
+function checkAccount(id) {
+  if (!runner.accountById(id)) throw new Error('Akun Google tidak ditemukan');
+  return id;
+}
 
 app.post('/api/series', wrap((req, res) => {
-  const s = { id: store.id(), title: req.body.title || 'Serial baru', characters: req.body.characters || [], createdAt: Date.now() };
+  const accountId = req.body.accountId ? checkAccount(req.body.accountId) : runner.activeAccount().id;
+  const s = { id: store.id(), title: req.body.title || 'Serial baru', characters: req.body.characters || [], accountId, createdAt: Date.now() };
   store.db.series.push(s); store.save(); res.json(s);
   // Project Flow dibuat per episode saat episode mulai diproses.
 }));
@@ -40,6 +47,7 @@ app.post('/api/series/:id/character-sheet', upload.single('file'), wrap((req, re
 app.put('/api/series/:id', wrap((req, res) => {
   const s = store.series(req.params.id); if (!s) throw new Error('Serial tidak ada');
   Object.assign(s, { title: req.body.title ?? s.title, characters: req.body.characters ?? s.characters });
+  if (req.body.accountId && req.body.accountId !== s.accountId) s.accountId = checkAccount(req.body.accountId);
   store.save(); res.json(s);
 }));
 app.delete('/api/series/:id', wrap((req, res) => {
@@ -101,7 +109,7 @@ app.post('/api/series/:id/storyboard', upload.single('file'), wrap(async (req, r
 app.post('/api/episodes/:id/auto', wrap(async (req, res) => {
   const ep = store.episode(req.params.id); if (!ep) throw new Error('Episode tidak ada');
   if (req.body && req.body.reprompt) ep.scenes.forEach(s => { s.shots = s.shots.map(() => ({ action: '', dialogue: '' })); s.customPrompt = ''; });
-  res.json(pipeline.start(ep.id, { onlyScenes: Array.isArray(req.body && req.body.scenes) ? req.body.scenes.map(Number) : null }));
+  res.json(pipeline.start(ep.id, { resume: true, onlyScenes: Array.isArray(req.body && req.body.scenes) ? req.body.scenes.map(Number) : null }));
 }));
 
 // Ganti start frame satu scene secara manual (mis. keyframe hasil Nano Banana).
@@ -170,8 +178,14 @@ app.post('/api/accounts', wrap(async (req, res) => {
   runner.switchAccount(acc.id).catch(e => runner.log(`Gagal pindah akun: ${e.message}`));
 }));
 app.post('/api/accounts/active', wrap(async (req, res) => res.json(await runner.switchAccount(req.body.id))));
-app.post('/api/run', wrap(async (req, res) => { await runner.runQueue(req.body.episodeId, req.body.scenes); res.json({ ok: true }); }));
-app.post('/api/stop', (req, res) => { runner.stop(); res.json({ ok: true }); });
+app.post('/api/run', wrap(async (req, res) => {
+  const ep = store.episode(req.body.episodeId); if (!ep) throw new Error('Episode tidak ada');
+  if (runner.state.running) throw new Error('Antrean sedang berjalan');
+  await runner.ensureAccount(pipeline.seriesAccount(store.series(ep.seriesId)).id);
+  await runner.runQueue(ep.id, req.body.scenes); res.json({ ok: true });
+}));
+app.post('/api/stop', (req, res) => { pipeline.stopAll(); res.json({ ok: true }); });
+app.delete('/api/queue/:id', wrap((req, res) => res.json(pipeline.cancel(req.params.id))));
 app.post('/api/open-flow', wrap(async (req, res) => {
   const ep = req.body && req.body.episodeId ? store.episode(req.body.episodeId) : null;
   await runner.openFlow(ep && ep.flowProjectUrl ? ep.flowProjectUrl : undefined); res.json({ ok: true });

@@ -12,9 +12,24 @@ const epDir = ep => path.join(store.DATA_DIR, 'episodes', ep.id);
 const rel = abs => path.relative(store.DATA_DIR, abs).split(path.sep).join('/');
 const safe = s => String(s).replace(/[^\w\- ]+/g, '').trim().replace(/\s+/g, '_') || 'episode';
 
+const { notify } = require('./notify');
+
 const active = new Set();
-// Antrean global: satu browser, jadi episode diproses bergiliran.
+// Antrean global: satu browser, jadi episode diproses bergiliran (urutan masuk).
 let chain = Promise.resolve();
+const queue = [];            // id episode yang menunggu giliran
+const cancelled = new Set(); // id episode yang dikeluarkan dari antrean sebelum gilirannya
+const waitRunner = async () => { while (runner.state.running) await new Promise(r => setTimeout(r, 3000)); };
+
+// 1 drama = 1 akun Google. Serial lama tanpa akun: pakai akun episode terakhirnya, atau akun aktif.
+function seriesAccount(series) {
+  if (!series.accountId || !runner.accountById(series.accountId)) {
+    const last = store.db.episodes.filter(e => e.seriesId === series.id && e.flowAccount && runner.accountById(e.flowAccount)).pop();
+    series.accountId = last ? last.flowAccount : runner.activeAccount().id;
+    store.save();
+  }
+  return runner.accountById(series.accountId);
+}
 
 function setStage(ep, stage, extra = {}) {
   ep.pipeline = { ...(ep.pipeline || {}), stage, at: Date.now(), ...extra };
@@ -43,12 +58,24 @@ async function crop(ep) {
   store.save();
 }
 
-async function process_(epId, { skipPrompt = false, onlyScenes = null } = {}) {
+async function process_(epId, { skipPrompt = false, onlyScenes = null, resume = false } = {}) {
+  const qi = queue.indexOf(epId); if (qi >= 0) queue.splice(qi, 1);
+  if (cancelled.delete(epId)) return;
   const ep = store.episode(epId); if (!ep) return;
   const series = store.series(ep.seriesId);
+  if (!series) return;
   const log = m => runner.log(`${ep.title}: ${m}`);
+  const label = `${series.title} · ${ep.title}`;
   try {
     if (!ep.storyboard) throw new Error('Storyboard belum diunggah');
+    const acc = seriesAccount(series);
+    if (resume) acc.creditOut = null;
+    if (acc.creditOut) {
+      const msg = `Kredit Flow akun "${acc.name}" habis. Isi kredit lalu klik Lanjutkan.`;
+      setStage(ep, 'attention', { error: msg });
+      log(msg);
+      return;
+    }
     if (!ep.scenes.every(s => s.startFrame)) { setStage(ep, 'cropping'); await crop(ep); }
 
     const needPrompt = !skipPrompt && ep.scenes.some(s => !s.customPrompt && !s.shots.some(x => x.action));
@@ -64,7 +91,8 @@ async function process_(epId, { skipPrompt = false, onlyScenes = null } = {}) {
       setStage(ep, 'generating');
       // Scene tanpa klip yang tertanda selesai (mis. unduhan gagal) dikerjakan ulang.
       ep.scenes.filter(s => todo.includes(s.n) && s.status === 'done').forEach(s => { s.status = 'draft'; });
-      while (runner.state.running) await new Promise(r => setTimeout(r, 3000));
+      await waitRunner();
+      await runner.ensureAccount(acc.id);
       const { done } = await runner.runQueue(ep.id, todo);
       await done;
     }
@@ -72,15 +100,18 @@ async function process_(epId, { skipPrompt = false, onlyScenes = null } = {}) {
     if (ep.scenes.some(s => s.flowName && !s.clip)) {
       setStage(ep, 'downloading');
       log('Semua video jadi. Mengunduh dari Flow berdasarkan nama scene…');
-      while (runner.state.running) await new Promise(r => setTimeout(r, 3000));
+      await waitRunner();
+      await runner.ensureAccount(ep.flowAccount || acc.id);
       await runner.downloadEpisode(ep);
     }
 
     const missing = ep.scenes.filter(s => !s.clip);
     if (missing.length) {
       const credit = missing.find(s => /Kredit Flow habis/.test(s.lastError || ''));
-      setStage(ep, 'attention', { error: credit ? `${credit.lastError} Scene tersisa: ${missing.map(s => s.n).join(', ')}.` : `Scene ${missing.map(s => s.n).join(', ')} belum punya video (cek manual / unggah sendiri), lalu klik Lanjutkan.` });
+      if (credit) acc.creditOut = Date.now();
+      setStage(ep, 'attention', { error: credit ? `${credit.lastError} (akun "${acc.name}") Scene tersisa: ${missing.map(s => s.n).join(', ')}.` : `Scene ${missing.map(s => s.n).join(', ')} belum punya video (cek manual / unggah sendiri), lalu klik Lanjutkan.` });
       log(ep.pipeline.error);
+      notify(credit ? `Kredit habis: ${acc.name}` : `Perlu dicek: ${label}`, ep.pipeline.error);
       return;
     }
 
@@ -89,9 +120,13 @@ async function process_(epId, { skipPrompt = false, onlyScenes = null } = {}) {
     await mergeEp(ep);
     setStage(ep, 'done');
     log(`Episode jadi (${ep.output.total} detik). Siap diunduh.`);
+    notify(`Episode jadi: ${label}`, `${ep.output.total} detik. Siap diunduh di dashboard.`);
   } catch (e) {
     setStage(ep, 'error', { error: e.message });
     log(`Alur otomatis berhenti: ${e.message}`);
+    notify(`Berhenti: ${label}`, e.message);
+  } finally {
+    if (!queue.length) { runner.log('Antrean episode kosong.'); }
   }
 }
 
@@ -100,9 +135,25 @@ function start(epId, opts) {
   if (active.has(epId)) throw new Error('Episode ini sedang diproses');
   const ep = store.episode(epId); if (!ep) throw new Error('Episode tidak ada');
   active.add(epId);
+  queue.push(epId);
   setStage(ep, 'waiting');
   chain = chain.then(() => process_(epId, opts)).finally(() => active.delete(epId));
+  return { ok: true, position: queue.length };
+}
+
+/** Keluarkan episode dari antrean (hanya yang belum mulai diproses). */
+function cancel(epId) {
+  const i = queue.indexOf(epId);
+  if (i < 0) throw new Error('Episode ini tidak sedang menunggu di antrean');
+  queue.splice(i, 1); cancelled.add(epId);
+  const ep = store.episode(epId); if (ep) setStage(ep, 'stopped');
   return { ok: true };
 }
 
-module.exports = { start, mergeEp, isActive: id => active.has(id) };
+/** Hentikan semua: scene yang sedang jalan berhenti setelah langkah ini, antrean dikosongkan. */
+function stopAll() {
+  for (const id of [...queue]) cancel(id);
+  runner.stop();
+}
+
+module.exports = { start, cancel, stopAll, mergeEp, seriesAccount, isActive: id => active.has(id), get queue() { return [...queue]; } };

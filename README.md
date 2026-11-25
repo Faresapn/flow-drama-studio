@@ -24,6 +24,7 @@ Semua data tersimpan di komputer sendiri (`data/`). Tidak ada server luar selain
 - [Tangga perbaikan otomatis](#tangga-perbaikan-otomatis)
 - [Pengaturan](#pengaturan)
 - [Struktur folder](#struktur-folder)
+- [Antrean, akun, dan notifikasi](#antrean-akun-dan-notifikasi)
 - [Uji](#uji)
 - [Masalah umum](#masalah-umum)
 - [Saran fitur & rencana update](SARAN.md)
@@ -46,7 +47,9 @@ Semua data tersimpan di komputer sendiri (`data/`). Tidak ada server luar selain
 | **Unduh otomatis** | Video diberi nama "Scene n – Episode" di Flow, lalu diunduh (720p) berdasarkan nama itu. |
 | **Unggah video manual** | Kalau satu scene gagal terus, unggah videonya sendiri lalu klik **Lanjutkan**. |
 | **Gabung episode** | ffmpeg: buang frame kolase di awal klip, samakan ke 1080×1920 24fps, fade audio di sambungan, loudnorm −14 LUFS, H.264. |
-| **Multi-akun Google** | Tambah beberapa akun Flow (profil Chrome terpisah per akun) dan pindah akun dari dashboard. |
+| **1 drama = 1 akun Google** | Tiap serial dipasangkan ke satu akun Google Flow. Antrean pindah akun sendiri saat giliran drama lain. Login tiap akun cukup sekali. |
+| **Antrean banyak episode** | Pilih banyak storyboard sekaligus: tiap gambar jadi satu episode (urut nama file) dan diproses bergiliran. Antrean terlihat di menu samping, episode bisa dikeluarkan dari antrean. |
+| **Notifikasi** | Pop-up macOS (dan Telegram kalau diatur) saat episode jadi, perlu dicek, berhenti karena error, atau kredit akun habis. |
 | **Log langsung** | Progres tiap langkah tampil di dashboard. |
 
 ---
@@ -250,6 +253,45 @@ Gagal audio ("Pembuatan audio gagal") langsung lompat ke tingkat 3. Daftar kata 
 | `PORT` | Port dashboard (default `4777`). |
 | `CLAUDE_BIN` | Lokasi perintah `claude` kalau tidak ada di PATH. |
 | `ANTHROPIC_API_KEY` | Opsional. Pakai API key, bukan login langganan Claude Code. |
+| `NOTIFY_MAC` | Isi `0` untuk mematikan pop-up notifikasi macOS. |
+| `TELEGRAM_BOT_TOKEN` | Opsional. Token bot Telegram untuk notifikasi ke HP. |
+| `TELEGRAM_CHAT_ID` | Opsional. Chat ID tujuan notifikasi Telegram. |
+
+---
+
+## Antrean, akun, dan notifikasi
+
+### 1 drama = 1 akun Google
+
+Supaya tidak bingung video ada di akun mana, tiap serial dipasangkan ke **satu akun Google**:
+
+1. Tambah akun di bagian bawah menu samping (**Tambah**), lalu login Google di jendela Chrome yang terbuka. Cukup sekali per akun.
+2. Saat membuat serial (atau di **Pengaturan serial**), pilih **Akun Google untuk drama ini**.
+3. Semua episode drama itu dibuat dan diunduh di akun tersebut. Kalau giliran antrean pindah ke drama dengan akun lain, aplikasi pindah akun sendiri (video yang sudah jadi di akun lama diunduh dulu).
+
+Nama akun tiap serial terlihat di menu samping. Serial lama yang belum punya akun otomatis memakai akun episode terakhirnya.
+
+### Antrean banyak episode
+
+- Di dialog serial, pilih **banyak storyboard sekaligus**. Tiap gambar jadi satu episode, diurutkan berdasarkan nama file (`eps1.png`, `eps2.png`, …).
+- Episode diproses bergiliran (satu browser). Daftar antrean terlihat di menu samping.
+- Episode yang menunggu bisa dikeluarkan lewat tombol **Keluarkan dari antrean**.
+- **Hentikan** menghentikan scene yang sedang jalan setelah langkah ini selesai, dan mengosongkan antrean.
+- Kalau kredit satu akun habis, episode lain **di akun yang sama** dilewati (ditandai "Perlu dicek"), sedangkan drama di akun lain tetap jalan. Setelah kredit diisi, klik **Lanjutkan** di episode itu.
+
+### Notifikasi
+
+Notifikasi dikirim saat episode jadi, perlu dicek, berhenti karena error, atau kredit akun habis.
+
+- **macOS:** pop-up otomatis. Kalau tidak muncul, izinkan notifikasi untuk Terminal (atau aplikasi tempat `npm start` dijalankan) di System Settings → Notifications. Matikan dengan `NOTIFY_MAC=0`.
+- **Telegram (opsional, notifikasi ke HP):**
+  1. Chat [@BotFather](https://t.me/BotFather) di Telegram, kirim `/newbot`, simpan token-nya.
+  2. Kirim pesan apa saja ke bot baru itu.
+  3. Buka `https://api.telegram.org/bot<TOKEN>/getUpdates`, cari angka `"chat":{"id":...}`.
+  4. Jalankan:
+     ```bash
+     TELEGRAM_BOT_TOKEN=123:abc TELEGRAM_CHAT_ID=987654 npm start
+     ```
 
 ---
 
@@ -266,6 +308,7 @@ flow-drama-studio/
 │   ├── human.js        # gerak mouse & ketikan seperti manusia
 │   ├── crop.js         # potong storyboard (sharp)
 │   ├── merge.js        # gabung video (ffmpeg)
+│   ├── notify.js       # notifikasi macOS + Telegram
 │   ├── calibrate.js    # bantu cari selector Flow
 │   └── store.js        # simpan data ke data/db.json
 ├── public/index.html   # dashboard

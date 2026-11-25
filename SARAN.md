@@ -4,6 +4,8 @@ Daftar fitur yang belum ada. Centang (`[x]`) kalau sudah dikerjakan.
 
 Urutan kerja yang disarankan: **#13 → #1 → #2**, lalu sisanya sesuai kebutuhan.
 
+Sudah dikerjakan: #3 notifikasi (macOS + Telegram), #5 antrean banyak episode, plus **1 drama = 1 akun Google** (lihat README).
+
 ---
 
 ## Paling berdampak
@@ -16,7 +18,7 @@ Urutan kerja yang disarankan: **#13 → #1 → #2**, lalu sisanya sesuai kebutuh
   Dialog per shot sudah ada di data. Ubah jadi file `.srt` atau tempel langsung ke video saat digabung (burn-in). Penting untuk Shorts karena banyak yang menonton tanpa suara.
   File terkait: `src/merge.js`
 
-- [ ] **3. Notifikasi saat episode selesai atau macet**
+- [x] **3. Notifikasi saat episode selesai atau macet**
   Antrean bisa berjalan berjam-jam. Kirim notifikasi macOS, Telegram, atau WhatsApp saat status "Perlu dicek", kredit habis, atau episode jadi.
   File terkait: `src/pipeline.js`
 
@@ -26,7 +28,7 @@ Urutan kerja yang disarankan: **#13 → #1 → #2**, lalu sisanya sesuai kebutuh
 
 ## Menghemat waktu
 
-- [ ] **5. Antrean banyak episode sekaligus**
+- [x] **5. Antrean banyak episode sekaligus**
   Unggah beberapa storyboard, biarkan jalan semalaman, dan pindah akun Google otomatis kalau kredit habis. Pindah akun sudah bisa, tapi masih manual.
   File terkait: `src/pipeline.js`, `src/runner.js`
 

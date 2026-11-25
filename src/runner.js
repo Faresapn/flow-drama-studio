@@ -47,6 +47,12 @@ async function switchAccount(id) {
   await openFlow();
   return acc;
 }
+/** Pindah ke akun tertentu kalau belum aktif (dipakai antrean: 1 drama = 1 akun Google). */
+async function ensureAccount(id) {
+  if (!id || id === activeAccount().id) return activeAccount();
+  return switchAccount(id);
+}
+const accountById = id => (store.db.accounts || []).find(a => a.id === id) || null;
 function addAccount(name) {
   activeAccount();
   const n = store.db.accounts.length + 1;
@@ -575,4 +581,4 @@ function stop() { state.stopRequested = true; log('Permintaan berhenti diterima,
 
 async function close() { if (context) await context.close().catch(() => {}); context = null; page = null; }
 
-module.exports = { state, log, activeAccount, switchAccount, addAccount, downloadEpisode, newTileIndex, downloadNewVideo, downloadTile, renameTile, videoSrcs, runQueue, runSteps, stop, openFlow, createProject, ensureProject, close, loadCfg, get page() { return page; } };
+module.exports = { state, log, activeAccount, switchAccount, ensureAccount, accountById, addAccount, downloadEpisode, newTileIndex, downloadNewVideo, downloadTile, renameTile, videoSrcs, runQueue, runSteps, stop, openFlow, createProject, ensureProject, close, loadCfg, get page() { return page; } };

@@ -57,6 +57,10 @@ main{min-width:0;padding:28px clamp(16px,3vw,48px) 72px}
 .ser-title{font-weight:700;font-size:14px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .ser-meta{font-size:12.5px;color:var(--muted);margin:2px 0 6px;display:flex;gap:6px;align-items:center;flex-wrap:wrap}
 .ser-meta .missing{color:var(--bad)}
+.queue{margin-top:14px;border-top:1px solid var(--line,#e5e5e5);padding-top:10px}
+.queue h3{font-size:12.5px;font-weight:600;color:var(--muted);margin:0 0 6px;text-transform:uppercase;letter-spacing:.04em}
+.queue ol{margin:0;padding-left:18px;font-size:13px;display:grid;gap:4px}
+.queue li span{color:var(--muted)}
 .ep{display:flex;align-items:center;gap:8px;width:100%;text-align:left;background:none;border:0;padding:7px 8px;border-radius:var(--r-sm);cursor:pointer;color:var(--ink-2);font-size:14px}
 .ep:hover{background:var(--sunken)}
 .ep[aria-current="true"]{background:var(--accent-soft);color:var(--accent);font-weight:600}
@@ -228,9 +232,10 @@ details.sub summary{cursor:pointer;font-weight:600}
     <div class="side-body">
       <button class="btn primary side-new" id="newSeries">Serial baru</button>
       <div id="seriesList"></div>
+      <div id="queueBox"></div>
     </div>
     <div class="side-foot">
-      <span class="field-label" id="acctLbl">Akun Google Flow</span>
+      <span class="field-label" id="acctLbl">Akun Google aktif (untuk login)</span>
       <div class="acct"><select id="acct" aria-labelledby="acctLbl"></select><button class="btn sm" id="addAcct" title="Tambah akun Google">Tambah</button></div>
       <button class="btn sm" id="openFlow">Buka Google Flow</button>
       <button class="link" id="showRules" style="justify-self:start;font-size:13px">Cara kerja perbaikan prompt</button>
@@ -310,13 +315,24 @@ function stepIndex(ep) {
   return 4;
 }
 
+const accName = id => ((S.accounts || []).find(a => a.id === id) || {}).name || 'akun aktif';
+
 // ---------- Sidebar ----------
+function renderQueue() {
+  const q = (S.queue || []).map(id => S.episodes.find(e => e.id === id)).filter(Boolean);
+  $('#queueBox').innerHTML = q.length ? `<div class="queue"><h3>Antrean (${q.length})</h3><ol>${q.map(e => {
+    const s = S.series.find(x => x.id === e.seriesId) || {};
+    return `<li>${esc(s.title || '')} · ${esc(shortTitle(e, s))} <span>(${esc(accName(s.accountId))})</span></li>`;
+  }).join('')}</ol></div>` : '';
+}
 function renderSide() {
+  renderQueue();
   $('#seriesList').innerHTML = S.series.map(s => {
     const eps = S.episodes.filter(e => e.seriesId === s.id);
     return `<div class="ser">
       <div class="ser-head"><span class="ser-title" title="${esc(s.title)}">${esc(s.title)}</span>
         <button class="icon-btn" data-edit-series="${s.id}" aria-label="Pengaturan serial ${esc(s.title)}" title="Pengaturan serial"><svg width="16" height="16" viewBox="0 0 24 24" aria-hidden="true"><circle cx="5" cy="12" r="2" fill="currentColor"/><circle cx="12" cy="12" r="2" fill="currentColor"/><circle cx="19" cy="12" r="2" fill="currentColor"/></svg></button></div>
+      <div class="ser-meta">Akun: ${esc(accName(s.accountId))}</div>
       <div class="ser-meta">${s.characterSheet ? `Sheet tokoh <a href="/files/${esc(s.characterSheet)}" target="_blank" rel="noopener">lihat</a>` : `<span class="missing">Belum ada sheet tokoh</span> <button class="link" data-sheet="${s.id}">unggah</button>`}</div>
       ${eps.map(e => { const st = epState(e); return `<button class="ep" data-ep="${e.id}" aria-current="${sel.ep === e.id}"><i class="dot ${st.cls}" aria-hidden="true"></i><span>${esc(shortTitle(e, s))}</span></button>`; }).join('')}
       <button class="ep ep-add" data-new-ep="${s.id}">+ Episode baru</button>
@@ -376,15 +392,20 @@ function pickSheet(seriesId) {
   inp.click();
 }
 
-function editSeries(id) {
+async function editSeries(id) {
   const s = id ? S.series.find(x => x.id === id) : { title: '', characters: [] };
+  const acc = await api('/api/accounts').catch(() => ({ accounts: [], active: null }));
+  const curAcc = s.accountId || acc.active;
   const txt = s.characters.map(c => `${c.key} | ${c.role} | ${c.look}`).join('\n');
   openDialog(id ? 'Pengaturan serial' : 'Serial baru', `
     <label for="stitle">Judul serial</label><input type="text" id="stitle" value="${esc(s.title)}" placeholder="Pelakor Berkedok Sahabat">
+    <label for="sacc">Akun Google untuk drama ini</label>
+    <select id="sacc">${acc.accounts.map(a => `<option value="${a.id}" ${a.id === curAcc ? 'selected' : ''}>${esc(a.name)}</option>`).join('')}</select>
+    <p class="hint">Semua episode drama ini dibuat dan diunduh di akun ini. Kalau drama lain memakai akun berbeda, antrean pindah akun sendiri. Tambah akun baru di bagian bawah menu samping.</p>
     <label for="ssheet">Sheet tokoh</label><input type="file" id="ssheet" accept="image/*">
     <p class="hint">${s.characterSheet ? 'Sudah ada. Pilih file hanya kalau mau mengganti.' : 'Satu gambar berisi semua tokoh. Dipakai sebagai referensi ke-2 di setiap scene supaya wajah dan baju konsisten.'}</p>
-    <label for="ssb">${id ? 'Storyboard episode berikutnya' : 'Storyboard episode 1'}</label><input type="file" id="ssb" accept="image/*">
-    <p class="hint">Begitu disimpan, episode langsung diproses otomatis sampai jadi.</p>
+    <label for="ssb">${id ? 'Storyboard episode berikutnya' : 'Storyboard episode'}</label><input type="file" id="ssb" accept="image/*" multiple>
+    <p class="hint">Boleh pilih banyak sekaligus: tiap gambar jadi satu episode, diurutkan berdasarkan nama file (mis. eps1.png, eps2.png…), lalu diproses bergiliran di antrean sampai jadi.</p>
     <details class="sub"><summary>Tokoh (opsional, diisi Claude dari storyboard)</summary>
       <label for="schars">Satu per baris: kode | peran | penampilan</label>
       <textarea id="schars" rows="6" placeholder="R | The wife | Indonesian woman, 32, sage green hijab, cream blouse">${esc(txt)}</textarea>
@@ -393,17 +414,20 @@ function editSeries(id) {
     `${id ? '<button class="btn danger" id="delS" style="margin-right:auto">Hapus serial</button>' : ''}<button class="btn" data-close>Batal</button><button class="btn primary" id="saveS">${id ? 'Simpan' : 'Buat serial'}</button>`);
   $('#saveS').onclick = async () => {
     const characters = $('#schars').value.split('\n').map(l => l.split('|').map(x => x.trim())).filter(p => p.length >= 3 && p[0]).map(([key, role, ...look]) => ({ key, role, look: look.join(' | ') }));
-    const body = { title: $('#stitle').value.trim() || 'Serial baru', characters };
-    const file = $('#ssb').files[0], sheet = $('#ssheet').files[0];
+    const body = { title: $('#stitle').value.trim() || 'Serial baru', characters, accountId: $('#sacc').value || undefined };
+    const files = [...$('#ssb').files].sort((a, b) => a.name.localeCompare(b.name, undefined, { numeric: true })), sheet = $('#ssheet').files[0];
     $('#saveS').disabled = true;
     try {
       const sv = await api(id ? `/api/series/${id}` : '/api/series', { method: id ? 'PUT' : 'POST', body });
       if (sheet) await uploadSheet(sv.id, sheet);
-      if (file) {
-        const fd = new FormData(); fd.append('file', file);
+      let first = null;
+      for (const f of files) {
+        const fd = new FormData(); fd.append('file', f);
         const ep = await api(`/api/series/${sv.id}/storyboard`, { method: 'POST', body: fd });
-        sel.ep = ep.id; toast('Storyboard diunggah. Episode diproses otomatis.');
-      } else toast('Serial tersimpan');
+        first = first || ep;
+      }
+      if (first) { sel.ep = first.id; toast(files.length > 1 ? `${files.length} episode masuk antrean.` : 'Storyboard diunggah. Episode diproses otomatis.'); }
+      else toast('Serial tersimpan');
       dlg.close(); load();
     } catch (e) { toast(e.message, 1); $('#saveS').disabled = false; }
   };
@@ -438,6 +462,8 @@ function renderMain() {
   else if (ep.output && st !== 'attention' && st !== 'error') primary = `<a class="btn primary" href="/files/${ep.output.file}" download>Unduh episode</a>`;
   else if (st === 'attention' || st === 'error') primary = `<button class="btn primary" id="autoResume">Lanjutkan</button>`;
   else if (!busy && ep.storyboard) primary = `<button class="btn primary" id="autoResume">Mulai otomatis</button>`;
+  const qPos = (S.queue || []).indexOf(ep.id);
+  if (st === 'waiting' && qPos >= 0) primary = `<span class="hint">Antrean ke-${qPos + 1}</span><button class="btn" id="unqueue">Keluarkan dari antrean</button>`;
 
   m.innerHTML = `
     <div class="head">
@@ -529,7 +555,7 @@ function sceneCard(sc) {
       <div class="row"><span class="pill ${s.cls}">${s.text}</span><button class="btn sm" data-detail="${sc.n}">Detail</button></div>
     </div></article>`;
 }
-const sig = ep => JSON.stringify([ep.pipeline && ep.pipeline.stage, ep.output && ep.output.at, ep.scenes.map(s => [s.status, !!s.clip, !!s.flowName, s.startFrame, s.title])]);
+const sig = ep => JSON.stringify([(S.queue || []).indexOf(ep.id), ep.pipeline && ep.pipeline.stage, ep.output && ep.output.at, ep.scenes.map(s => [s.status, !!s.clip, !!s.flowName, s.startFrame, s.title])]);
 
 function bindMain(ep) {
   const t = $('#epTitle');
@@ -543,7 +569,8 @@ function bindMain(ep) {
   const drop = $('#sbDrop');
   if (drop) { drop.ondragover = e => { e.preventDefault(); drop.classList.add('over'); }; drop.ondragleave = () => drop.classList.remove('over'); drop.ondrop = e => { e.preventDefault(); drop.classList.remove('over'); e.dataTransfer.files[0] && up(e.dataTransfer.files[0]); }; }
   const ar = $('#autoResume'); if (ar) ar.onclick = async () => { ar.disabled = true; try { await api(`/api/episodes/${ep.id}/auto`, { method: 'POST', body: {} }); toast('Alur otomatis berjalan'); load(); } catch (e) { toast(e.message, 1); ar.disabled = false; } };
-  const stop = $('#stopBtn'); if (stop) stop.onclick = async () => { await api('/api/stop', { method: 'POST' }); toast('Antrean berhenti setelah langkah ini selesai'); };
+  const stop = $('#stopBtn'); if (stop) stop.onclick = async () => { await api('/api/stop', { method: 'POST' }); toast('Berhenti setelah langkah ini selesai. Episode lain di antrean dikeluarkan.'); load(); };
+  const unq = $('#unqueue'); if (unq) unq.onclick = async () => { try { await api(`/api/queue/${ep.id}`, { method: 'DELETE' }); toast('Dikeluarkan dari antrean'); load(); } catch (e) { toast(e.message, 1); } };
   $('#mGen').onclick = async () => { menu.classList.remove('open'); try { await api(`/api/episodes/${ep.id}/auto`, { method: 'POST', body: {} }); toast('Scene yang belum jadi diproses'); load(); } catch (e) { toast(e.message, 1); } };
   $('#mMerge').onclick = async () => { menu.classList.remove('open'); toast('Menggabungkan video…'); try { await api(`/api/episodes/${ep.id}/merge`, { method: 'POST' }); toast('Episode digabung ulang'); load(); } catch (e) { toast(e.message, 1); } };
   $('#mDel').onclick = async () => { if (!confirm('Hapus episode ini?')) return; await api(`/api/episodes/${ep.id}`, { method: 'DELETE' }); sel.ep = null; load(); };
