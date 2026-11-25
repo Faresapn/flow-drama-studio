@@ -53,11 +53,11 @@ Semua data tersimpan di komputer sendiri (`data/`). Tidak ada server luar selain
 | **Notifikasi** | Pop-up macOS (dan Telegram kalau diatur) saat episode jadi, perlu dicek, berhenti karena error, atau kredit akun habis. |
 | **VO otomatis** | Dialog yang dibuang dari prompt (tangga tingkat 3–4) dibuatkan suara lewat ElevenLabs, lalu ditempel ke klip saat digabung. Suara bisa diatur per tokoh. |
 | **Subtitle** | File `.srt` selalu dibuat dari dialog. Opsional: subtitle ditempel langsung ke video (atur per serial). |
-| **Judul, deskripsi, hashtag, thumbnail** | Setelah episode jadi, Claude menulis teks upload dan memilih frame terbaik untuk thumbnail. Tinggal salin. |
+| **Judul, deskripsi, hashtag, prompt thumbnail** | Setelah episode jadi, Claude menulis teks upload plus prompt thumbnail siap tempel di ChatGPT (dan teks hook untuk thumbnail). Tinggal salin. |
 | **Generate ulang satu scene** | Hasil jelek tapi tidak error? Klik **Generate ulang (versi baru)** di detail scene: video baru dibuat (nama di Flow diberi akhiran `v2`, `v3`, …), diunduh, lalu episode digabung ulang. |
 | **Preview & potong** | Putar semua scene berurutan, atur potongan awal/akhir tiap scene, lalu gabung ulang. |
 | **Usulan aturan perbaikan** | Claude membaca prompt yang pernah ditolak Flow dan mengusulkan kata pengganti baru. Kamu pilih mana yang dipakai, lalu otomatis masuk ke `config/fix-rules.json`. |
-| **Peringatan tampilan Flow berubah** | Kalau otomasi macet (tombol tidak ketemu), screenshot halaman Flow disimpan di `data/debug/` dan notifikasi dikirim (Telegram ikut mengirim gambarnya). |
+| **Jeda otomatis** | Kalau otomasi macet (tampilan Flow berubah) atau video tidak muncul, antrean langsung dijeda di scene itu, screenshot disimpan di `data/debug/`, dan notifikasi dikirim. Kamu bisa buat scene itu manual, lalu klik Lanjutkan: scene berikutnya langsung diproses. |
 | **Statistik** | Jumlah generate (perkiraan kredit), berhasil, ditolak, audio gagal, tingkat tertinggi, dan pesan gagal terbanyak, per drama dan per episode. |
 | **Gaya Claude per drama** | Pilih gaya dialog (dramatis, santai, lucu, tegang, sedih), model Claude (Opus/Sonnet/Haiku), dan catatan gaya bebas. |
 | **Aman di jaringan** | Dashboard hanya bisa dibuka dari Mac sendiri (`127.0.0.1`). |
@@ -333,9 +333,28 @@ VO disimpan di `data/episodes/<id>/vo/` dan dipakai ulang kalau teksnya sama (ti
 - File `.srt` selalu dibuat di samping video episode (tombol **Subtitle .srt**). Bisa diunggah ke YouTube.
 - Centang **Tempel subtitle di video** di dialog serial → **Hasil video** untuk menempel teks langsung ke video.
 
-### Judul, deskripsi, hashtag, dan thumbnail
+### Judul, deskripsi, hashtag, dan prompt thumbnail
 
-Setelah episode digabung, Claude menulis judul, deskripsi, hashtag, dan memilih thumbnail dari beberapa frame. Hasilnya ada di bagian **Judul & thumbnail untuk upload** di halaman episode, lengkap dengan tombol salin. Matikan di dialog serial → **Hasil video** kalau tidak perlu.
+Setelah episode digabung, Claude menulis judul, deskripsi, hashtag, dan **prompt thumbnail untuk ChatGPT** (Claude membaca sheet tokoh dan storyboard supaya wajah dan baju tokoh sesuai), plus teks hook pendek untuk ditempel di thumbnail. Hasilnya ada di bagian **Judul & prompt thumbnail untuk upload** di halaman episode, lengkap dengan tombol salin. Matikan di dialog serial → **Hasil video** kalau tidak perlu.
+
+---
+
+## Kalau otomasi macet (jeda otomatis)
+
+Antrean otomatis **dijeda** di scene yang bermasalah kalau:
+- tombol di Flow tidak ketemu (biasanya tampilan Flow berubah), atau
+- video tidak muncul sampai batas waktu (`result.timeoutSec`).
+
+Kamu dapat notifikasi, dan menu samping menampilkan **Antrean dijeda**. Episode lain di antrean ditahan dulu.
+
+Buka **Detail** scene itu → **Buat scene ini manual**, lalu pilih salah satu:
+
+1. **Sudah dibuat di Flow**: buat videonya sendiri di Flow (prompt bisa disalin dari Detail), ganti nama videonya di Flow persis seperti nama yang ditampilkan (mis. `Scene 3 – Episode 1`), lalu klik tombol ini. App mengunduhnya sendiri.
+2. **Lewati, unggah sendiri**: unggah videonya lewat tombol **Unggah video manual**.
+
+Lalu klik **Lanjutkan** di halaman episode. Scene berikutnya langsung diproses, lalu episode lain yang tadi ditahan.
+
+Kalau tampilan Flow memang berubah, jalankan `npm run calibrate` dan perbarui `config/flow.json` supaya scene berikutnya tidak macet lagi.
 
 ### Preview & potong
 

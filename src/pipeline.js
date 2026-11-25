@@ -6,7 +6,7 @@ const store = require('./store');
 const runner = require('./runner');
 const { cropStoryboard } = require('./crop');
 const { autoFill, episodeMeta } = require('./autoprompt');
-const { mergeEpisode, frameAt } = require('./merge');
+const { mergeEpisode } = require('./merge');
 const vo = require('./vo');
 const subs = require('./subs');
 
@@ -21,6 +21,10 @@ const active = new Set();
 let chain = Promise.resolve();
 const queue = [];            // id episode yang menunggu giliran
 const cancelled = new Set(); // id episode yang dikeluarkan dari antrean sebelum gilirannya
+// Jeda otomatis: kalau tampilan Flow berubah atau video tidak muncul, antrean berhenti di scene itu.
+// Episode lain yang tiba gilirannya ditahan (held) sampai kamu klik Lanjutkan.
+let paused = null;            // {epId, scene, reason, at}
+const held = [];
 const waitRunner = async () => { while (runner.state.running) await new Promise(r => setTimeout(r, 3000)); };
 
 // 1 drama = 1 akun Google. Serial lama tanpa akun: pakai akun episode terakhirnya, atau akun aktif.
@@ -65,25 +69,13 @@ async function mergeEp(ep, log = m => runner.log(`${ep.title}: ${m}`)) {
   return ep.output;
 }
 
-/** Judul, deskripsi, hashtag, dan thumbnail (dipilih Claude dari beberapa frame). Tidak menghentikan alur kalau gagal. */
+/** Judul, deskripsi, hashtag, dan prompt thumbnail untuk ChatGPT. Tidak menghentikan alur kalau gagal. */
 async function makeMeta(ep, log = m => runner.log(`${ep.title}: ${m}`)) {
   const series = store.series(ep.seriesId);
-  if (!ep.output) throw new Error('Episode belum digabung');
-  const dir = path.join(epDir(ep), 'thumbs'); fs.mkdirSync(dir, { recursive: true });
-  const video = path.join(store.DATA_DIR, ep.output.file);
-  const frames = [];
-  let t = 0;
-  for (const seg of ep.output.segs || []) {
-    const f = path.join(dir, `cand_${seg.scene}.jpg`);
-    await frameAt(video, t + seg.length * 0.45, f).then(() => frames.push(f)).catch(() => {});
-    t += seg.length;
-  }
-  if (!frames.length) throw new Error('Tidak bisa mengambil frame dari video');
-  log('Claude menulis judul, deskripsi, hashtag, dan memilih thumbnail…');
-  const m = await episodeMeta(series, ep, frames, dir);
-  const thumb = path.join(dir, 'thumbnail.jpg');
-  fs.copyFileSync(frames[m.thumbnail], thumb);
-  ep.meta = { title: m.title, description: m.description, hashtags: m.hashtags, thumbnail: rel(thumb), at: Date.now() };
+  const refs = [series.characterSheet, ep.storyboard].filter(Boolean).map(r => path.join(store.DATA_DIR, r)).filter(f => fs.existsSync(f));
+  log('Claude menulis judul, deskripsi, hashtag, dan prompt thumbnail…');
+  const m = await episodeMeta(series, ep, refs, store.DATA_DIR);
+  ep.meta = { ...m, at: Date.now() };
   store.save();
   return ep.meta;
 }
@@ -106,6 +98,12 @@ async function process_(epId, { skipPrompt = false, onlyScenes = null, resume = 
   if (!series) return;
   const log = m => runner.log(`${ep.title}: ${m}`);
   const label = `${series.title} · ${ep.title}`;
+  if (paused && !resume) {
+    held.push(epId);
+    setStage(ep, 'held');
+    log('Antrean sedang dijeda; episode ini menunggu sampai dilanjutkan.');
+    return;
+  }
   try {
     if (!ep.storyboard) throw new Error('Storyboard belum diunggah');
     const acc = seriesAccount(series);
@@ -126,7 +124,8 @@ async function process_(epId, { skipPrompt = false, onlyScenes = null, resume = 
     }
 
     // Scene yang sudah jadi di Flow (punya nama) tinggal diunduh, tidak di-generate ulang.
-    const todo = ep.scenes.filter(s => !s.clip && !(s.status === 'done' && s.flowName) && (!onlyScenes || onlyScenes.includes(s.n))).map(s => s.n);
+    // Scene yang kamu tandai "buat manual" dilewati; videonya diunggah sendiri.
+    const todo = ep.scenes.filter(s => !s.clip && !s.manual && !(s.status === 'done' && s.flowName) && (!onlyScenes || onlyScenes.includes(s.n))).map(s => s.n);
     if (todo.length) {
       setStage(ep, 'generating');
       // Scene tanpa klip yang tertanda selesai (mis. unduhan gagal) dikerjakan ulang.
@@ -135,6 +134,18 @@ async function process_(epId, { skipPrompt = false, onlyScenes = null, resume = 
       await runner.ensureAccount(acc.id);
       const { done } = await runner.runQueue(ep.id, todo);
       await done;
+    }
+
+    // Otomasi macet di satu scene: jeda antrean dan beri pilihan (perbaiki / buat manual).
+    const stuck = ep.scenes.find(s => s.pauseReason && !s.clip && !s.manual && !s.flowName);
+    if (stuck) {
+      paused = { epId, scene: stuck.n, reason: stuck.pauseReason, at: Date.now() };
+      const why = stuck.pauseReason === 'timeout' ? 'video tidak muncul di Flow' : 'otomasi macet, kemungkinan tampilan Flow berubah';
+      const msg = `Antrean dijeda di scene ${stuck.n}: ${why}. Buat scene ini manual di Flow (buka Detail scene), atau perbaiki lalu klik Lanjutkan.`;
+      setStage(ep, 'attention', { error: msg, paused: true });
+      log(msg);
+      notify(`Antrean dijeda: ${label}`, msg);
+      return;
     }
 
     if (ep.scenes.some(s => s.flowName && !s.clip)) {
@@ -149,7 +160,11 @@ async function process_(epId, { skipPrompt = false, onlyScenes = null, resume = 
     if (missing.length) {
       const credit = missing.find(s => /Kredit Flow habis/.test(s.lastError || ''));
       if (credit) acc.creditOut = Date.now();
-      setStage(ep, 'attention', { error: credit ? `${credit.lastError} (akun "${acc.name}") Scene tersisa: ${missing.map(s => s.n).join(', ')}.` : `Scene ${missing.map(s => s.n).join(', ')} belum punya video (cek manual / unggah sendiri), lalu klik Lanjutkan.` });
+      const manual = missing.filter(s => s.manual).map(s => s.n), other = missing.filter(s => !s.manual).map(s => s.n);
+      const parts = [];
+      if (manual.length) parts.push(`Scene ${manual.join(', ')} kamu buat manual: unggah videonya di Detail scene`);
+      if (other.length) parts.push(`Scene ${other.join(', ')} belum punya video (cek manual / unggah sendiri)`);
+      setStage(ep, 'attention', { error: credit ? `${credit.lastError} (akun "${acc.name}") Scene tersisa: ${missing.map(s => s.n).join(', ')}.` : `${parts.join('. ')}, lalu klik Lanjutkan.` });
       log(ep.pipeline.error);
       notify(credit ? `Kredit habis: ${acc.name}` : `Perlu dicek: ${label}`, ep.pipeline.error);
       return;
@@ -158,7 +173,7 @@ async function process_(epId, { skipPrompt = false, onlyScenes = null, resume = 
     setStage(ep, 'merging');
     log('Menggabungkan semua scene…');
     await mergeEp(ep, log);
-    if (series.autoMeta !== false) await makeMeta(ep, log).catch(e => log(`Judul & thumbnail gagal dibuat: ${e.message}`));
+    if (series.autoMeta !== false) await makeMeta(ep, log).catch(e => log(`Judul & prompt thumbnail gagal dibuat: ${e.message}`));
     setStage(ep, 'done');
     log(`Episode jadi (${ep.output.total} detik). Siap diunduh.`);
     notify(`Episode jadi: ${label}`, `${ep.output.total} detik. Siap diunduh di dashboard.`);
@@ -175,11 +190,18 @@ async function process_(epId, { skipPrompt = false, onlyScenes = null, resume = 
 function start(epId, opts) {
   if (active.has(epId)) throw new Error('Episode ini sedang diproses');
   const ep = store.episode(epId); if (!ep) throw new Error('Episode tidak ada');
-  active.add(epId);
-  queue.push(epId);
+  // Lanjutkan = buka jeda: episode ini jalan dulu, lalu episode yang tadi ditahan.
+  const resuming = opts && opts.resume && paused;
+  if (resuming) paused = null;
+  enqueue(ep, opts);
+  if (opts && opts.resume) for (const id of held.splice(0)) { const h = store.episode(id); if (h && !active.has(id)) enqueue(h, {}); }
+  return { ok: true, position: queue.indexOf(epId) + 1, resumed: !!resuming };
+}
+function enqueue(ep, opts) {
+  active.add(ep.id);
+  queue.push(ep.id);
   setStage(ep, 'waiting');
-  chain = chain.then(() => process_(epId, opts)).finally(() => active.delete(epId));
-  return { ok: true, position: queue.length };
+  chain = chain.then(() => process_(ep.id, opts)).finally(() => active.delete(ep.id));
 }
 
 /** Keluarkan episode dari antrean (hanya yang belum mulai diproses). */
@@ -194,7 +216,8 @@ function cancel(epId) {
 /** Hentikan semua: scene yang sedang jalan berhenti setelah langkah ini, antrean dikosongkan. */
 function stopAll() {
   for (const id of [...queue]) cancel(id);
+  for (const id of held.splice(0)) { const ep = store.episode(id); if (ep) setStage(ep, 'stopped'); }
   runner.stop();
 }
 
-module.exports = { start, cancel, stopAll, mergeEp, makeMeta, seriesAccount, isActive: id => active.has(id), get queue() { return [...queue]; } };
+module.exports = { start, cancel, stopAll, mergeEp, makeMeta, seriesAccount, isActive: id => active.has(id), get queue() { return [...queue]; }, get held() { return [...held]; }, get paused() { return paused; } };

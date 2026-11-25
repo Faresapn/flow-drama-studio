@@ -296,12 +296,15 @@ function sceneState(sc) {
   if (sc.flowName) return { cls: 'busy', text: 'Jadi, menunggu unduh' };
   if (sc.status === 'running') return { cls: 'busy', text: 'Sedang dibuat' };
   if (sc.status === 'queued') return { cls: '', text: 'Antre' };
+  if (sc.manual) return { cls: 'bad', text: 'Manual: unggah video' };
+  if (sc.pauseReason) return { cls: 'bad', text: 'Dijeda' };
   if (sc.status === 'failed' || sc.status === 'manual') return { cls: 'bad', text: 'Perlu dicek' };
   return { cls: '', text: 'Belum dibuat' };
 }
 function epState(ep) {
   const st = ep.pipeline && ep.pipeline.stage;
   if (ep.output && (!st || st === 'done')) return { cls: 'ok', text: 'Selesai' };
+  if (st === 'held') return { cls: '', text: 'Dijeda' };
   if (BUSY.includes(st)) return { cls: 'busy', text: 'Berjalan' };
   if (st === 'attention' || st === 'error') return { cls: 'bad', text: 'Perlu dicek' };
   return { cls: '', text: 'Belum mulai' };
@@ -331,11 +334,13 @@ const accName = id => ((S.accounts || []).find(a => a.id === id) || {}).name || 
 
 // ---------- Sidebar ----------
 function renderQueue() {
-  const q = (S.queue || []).map(id => S.episodes.find(e => e.id === id)).filter(Boolean);
-  $('#queueBox').innerHTML = q.length ? `<div class="queue"><h3>Antrean (${q.length})</h3><ol>${q.map(e => {
+  const q = [...(S.queue || []), ...(S.held || [])].map(id => S.episodes.find(e => e.id === id)).filter(Boolean);
+  const p = S.paused && S.episodes.find(e => e.id === S.paused.epId);
+  const pausedHtml = p ? `<div class="queue"><h3 style="color:var(--bad)">Antrean dijeda</h3><p class="hint" style="margin:0 0 6px">${esc(p.title)} scene ${S.paused.scene}: ${S.paused.reason === 'timeout' ? 'video tidak muncul' : 'tampilan Flow kemungkinan berubah'}.</p><button class="btn sm" data-ep="${p.id}">Buka episode</button></div>` : '';
+  $('#queueBox').innerHTML = pausedHtml + (q.length ? `<div class="queue"><h3>Antrean (${q.length})</h3><ol>${q.map(e => {
     const s = S.series.find(x => x.id === e.seriesId) || {};
     return `<li>${esc(s.title || '')} · ${esc(shortTitle(e, s))} <span>(${esc(accName(s.accountId))})</span></li>`;
-  }).join('')}</ol></div>` : '';
+  }).join('')}</ol></div>` : '');
 }
 function renderSide() {
   renderQueue();
@@ -353,6 +358,7 @@ function renderSide() {
 }
 const shortTitle = (e, s) => s && e.title.toLowerCase().startsWith(s.title.toLowerCase()) ? e.title.slice(s.title.length).replace(/^[\s–—:-]+/, '') || e.title : e.title;
 
+$('#queueBox').addEventListener('click', e => { const b = e.target.closest('[data-ep]'); if (b) { sel.ep = b.dataset.ep; lastSig = ''; renderSide(); renderMain(); closeNav(); } });
 $('#seriesList').addEventListener('click', e => {
   const b = e.target.closest('button'); if (!b) return;
   if (b.dataset.ep) { sel.ep = b.dataset.ep; lastSig = ''; renderSide(); renderMain(); closeNav(); window.scrollTo(0, 0); }
@@ -521,7 +527,7 @@ function renderMain() {
   let primary = '';
   if (running && busy) primary = `<button class="btn stop" id="stopBtn">Hentikan</button>`;
   else if (ep.output && st !== 'attention' && st !== 'error') primary = `<a class="btn primary" href="/files/${ep.output.file}" download>Unduh episode</a>`;
-  else if (st === 'attention' || st === 'error') primary = `<button class="btn primary" id="autoResume">Lanjutkan</button>`;
+  else if (st === 'attention' || st === 'error' || st === 'held') primary = `<button class="btn primary" id="autoResume">Lanjutkan</button>`;
   else if (!busy && ep.storyboard) primary = `<button class="btn primary" id="autoResume">Mulai otomatis</button>`;
   const qPos = (S.queue || []).indexOf(ep.id);
   if (st === 'waiting' && qPos >= 0) primary = `<span class="hint">Antrean ke-${qPos + 1}</span><button class="btn" id="unqueue">Keluarkan dari antrean</button>`;
@@ -587,6 +593,7 @@ function progressBox(ep) {
   let msg = '';
   if (st === 'done' || (ep.output && !st)) msg = 'Episode selesai dan siap diunduh.';
   else if (st === 'waiting') msg = 'Menunggu giliran: episode lain sedang diproses.';
+  else if (st === 'held') msg = 'Antrean sedang dijeda karena ada scene yang macet. Episode ini jalan lagi setelah kamu klik Lanjutkan.';
   else if (busy) msg = { cropping: 'Memotong storyboard…', prompting: 'Claude membaca storyboard dan menulis prompt…', generating: 'Google Flow sedang membuat video. Satu scene ±3–8 menit. Jangan tutup jendela Chrome otomasi.', downloading: 'Mengunduh video dari Flow berdasarkan nama scene…', merging: 'Menggabungkan semua scene…' }[st];
   else if (bad) {
     const err = ep.pipeline.error || '';
@@ -602,14 +609,14 @@ function progressBox(ep) {
 
 function metaBox(ep) {
   const m = ep.meta;
-  return `<details class="box" open><summary>Judul & thumbnail untuk upload</summary><div class="inner meta-box">
-    ${m ? `<img src="/files/${m.thumbnail}?t=${m.at}" alt="Thumbnail ${esc(ep.title)}">
-      <a class="btn sm" href="/files/${m.thumbnail}" download>Unduh thumbnail</a>
-      <label>Judul</label><p id="mTitle">${esc(m.title)}</p>
-      <label>Deskripsi</label><p id="mDesc">${esc(m.description)}</p>
-      <label>Hashtag</label><p id="mTags">${esc(m.hashtags.join(' '))}</p>
-      <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:8px"><button class="btn sm" data-copy="mTitle">Salin judul</button><button class="btn sm" data-copy="all">Salin deskripsi + hashtag</button><button class="btn sm" id="remeta">Buat ulang</button></div>`
-    : `<p class="hint">Belum ada. Claude bisa menulis judul, deskripsi, hashtag, dan memilih thumbnail dari video.</p><button class="btn sm" id="remeta">Buat sekarang</button>`}
+  return `<details class="box" open><summary>Judul & prompt thumbnail untuk upload</summary><div class="inner meta-box">
+    ${m ? `<label>Judul</label><p>${esc(m.title)}</p>
+      <label>Deskripsi</label><p>${esc(m.description)}</p>
+      <label>Hashtag</label><p>${esc((m.hashtags || []).join(' '))}</p>
+      <label>Prompt thumbnail (tempel di ChatGPT)</label><p>${esc(m.thumbnailPrompt || '')}</p>
+      ${m.thumbnailText ? `<label>Teks di thumbnail</label><p>${esc(m.thumbnailText)}</p>` : ''}
+      <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:8px"><button class="btn sm" data-copy="title">Salin judul</button><button class="btn sm" data-copy="desc">Salin deskripsi + hashtag</button><button class="btn sm" data-copy="thumb">Salin prompt thumbnail</button><button class="btn sm" id="remeta">Buat ulang</button></div>`
+    : `<p class="hint">Belum ada. Claude bisa menulis judul, deskripsi, hashtag, dan prompt thumbnail untuk ChatGPT.</p><button class="btn sm" id="remeta">Buat sekarang</button>`}
   </div></details>`;
 }
 function previewBox(ep) {
@@ -643,7 +650,7 @@ function sceneCard(sc) {
       <div class="row"><span class="pill ${s.cls}">${s.text}</span><button class="btn sm" data-detail="${sc.n}">Detail</button></div>
     </div></article>`;
 }
-const sig = ep => JSON.stringify([(S.queue || []).indexOf(ep.id), ep.meta && ep.meta.at, ep.pipeline && ep.pipeline.stage, ep.output && ep.output.at, ep.scenes.map(s => [s.status, !!s.clip, !!s.flowName, s.startFrame, s.title])]);
+const sig = ep => JSON.stringify([(S.queue || []).indexOf(ep.id), ep.scenes.map(s => [s.manual, s.pauseReason]), ep.meta && ep.meta.at, ep.pipeline && ep.pipeline.stage, ep.output && ep.output.at, ep.scenes.map(s => [s.status, !!s.clip, !!s.flowName, s.startFrame, s.title])]);
 
 function bindMain(ep) {
   const t = $('#epTitle');
@@ -663,9 +670,10 @@ function bindMain(ep) {
   $('#mMerge').onclick = async () => { menu.classList.remove('open'); toast('Menggabungkan video…'); try { await api(`/api/episodes/${ep.id}/merge`, { method: 'POST' }); toast('Episode digabung ulang'); load(); } catch (e) { toast(e.message, 1); } };
   $('#mDel').onclick = async () => { if (!confirm('Hapus episode ini?')) return; await api(`/api/episodes/${ep.id}`, { method: 'DELETE' }); sel.ep = null; load(); };
   $('#scenes').onclick = e => { const b = e.target.closest('[data-detail]'); if (b) openScene(ep, +b.dataset.detail); };
-  const rm = $('#remeta'); if (rm) rm.onclick = async () => { rm.disabled = true; rm.textContent = 'Claude sedang menulis…'; try { await api(`/api/episodes/${ep.id}/meta`, { method: 'POST', body: {} }); toast('Judul & thumbnail siap'); load(); } catch (e) { toast(e.message, 1); rm.disabled = false; rm.textContent = 'Coba lagi'; } };
+  const rm = $('#remeta'); if (rm) rm.onclick = async () => { rm.disabled = true; rm.textContent = 'Claude sedang menulis…'; try { await api(`/api/episodes/${ep.id}/meta`, { method: 'POST', body: {} }); toast('Judul & prompt thumbnail siap'); load(); } catch (e) { toast(e.message, 1); rm.disabled = false; rm.textContent = 'Coba lagi'; } };
   $$('[data-copy]').forEach(b => b.onclick = () => {
-    const m = ep.meta; const txt = b.dataset.copy === 'mTitle' ? m.title : `${m.description}\n\n${m.hashtags.join(' ')}`;
+    const m = ep.meta;
+    const txt = { title: m.title, desc: `${m.description}\n\n${(m.hashtags || []).join(' ')}`, thumb: m.thumbnailPrompt + (m.thumbnailText ? `\n\nText overlay (add later): ${m.thumbnailText}` : '') }[b.dataset.copy];
     navigator.clipboard.writeText(txt); toast('Disalin');
   });
   const pv = $('#pv');
@@ -695,6 +703,8 @@ function bindMain(ep) {
 }
 
 // ---------- Scene detail ----------
+// Sama dengan sceneVideoName di src/runner.js.
+const expectedName = (ep, sc) => `Scene ${sc.n} – ${ep.title}`.slice(0, 74) + (sc.version > 1 ? ` v${sc.version}` : '');
 async function openScene(ep, n) {
   const sc = ep.scenes.find(s => s.n === n); if (!sc) return;
   const series = S.series.find(s => s.id === ep.seriesId);
@@ -707,7 +717,16 @@ async function openScene(ep, n) {
         ${sc.needsVO && sc.needsVO.length ? `<div class="vo">Dialog yang perlu VO: ${sc.needsVO.map(v => `shot ${v.shot} "${esc(v.line)}"`).join(', ')}</div>` : ''}
       </div>
       <div>
-        ${sc.lastScreenshot && (sc.status === 'failed') ? `<div class="vo">Otomasi macet, kemungkinan tampilan Flow berubah. <a href="/files/${sc.lastScreenshot}" target="_blank" rel="noopener">Lihat screenshot</a>, lalu jalankan <code>npm run calibrate</code>.</div>` : ''}
+        ${sc.pauseReason ? `<div class="vo">Antrean dijeda di scene ini: ${sc.pauseReason === 'timeout' ? 'video tidak muncul di Flow' : 'otomasi macet, kemungkinan tampilan Flow berubah'}.${sc.lastScreenshot ? ` <a href="/files/${sc.lastScreenshot}" target="_blank" rel="noopener">Lihat screenshot</a>.` : ''}</div>` : ''}
+        ${!sc.clip ? `<details class="sub" ${sc.pauseReason || sc.manual ? 'open' : ''}><summary>Buat scene ini manual</summary>
+          <p class="hint">Buat videonya sendiri di Google Flow (salin prompt di bawah), lalu pilih:</p>
+          <ol class="hint" style="padding-left:18px">
+            <li>Ganti nama video di Flow jadi <b id="expName">${esc(expectedName(ep, sc))}</b> <button class="link" id="copyName">salin nama</button>, lalu klik <b>Sudah dibuat di Flow</b>. App akan mengunduhnya sendiri.</li>
+            <li>Atau klik <b>Lewati, unggah sendiri</b>, lalu unggah videonya lewat tombol di kiri.</li>
+          </ol>
+          <div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn sm primary" data-manual="flow">Sudah dibuat di Flow</button><button class="btn sm" data-manual="upload">Lewati, unggah sendiri</button>${sc.manual || sc.flowName ? '<button class="btn sm" data-manual="auto">Batal, buat otomatis</button>' : ''}</div>
+          <p class="hint">Setelah itu klik <b>Lanjutkan</b> di halaman episode: scene berikutnya langsung diproses.</p>
+        </details>` : ''}
         <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap"><span class="pill ${s.cls}">${s.text}</span>${sc.attempts.length ? `<span class="hint">${sc.attempts.length} percobaan</span>` : ''}${sc.flowName ? `<span class="hint">Di Flow: “${esc(sc.flowName)}”</span>` : ''}</div>
         ${sc.startFrame ? `<p class="hint" style="margin:12px 0 6px">Frame storyboard</p><img src="/files/${sc.startFrame}" alt="Storyboard scene ${n}" style="width:100%;border-radius:7px">` : ''}
         <label for="ftitle">Judul scene</label><input type="text" id="ftitle" value="${esc(sc.title)}">
@@ -766,6 +785,14 @@ async function openScene(ep, n) {
     await api(`/api/episodes/${ep.id}/scenes/${n}`, { method: 'PUT', body: { ...collect(), status: 'draft' } });
     try { await api('/api/run', { method: 'POST', body: { episodeId: ep.id, scenes: [n] } }); toast('Scene masuk antrean'); dlg.close(); setTimeout(load, 800); } catch (e) { toast(e.message, 1); }
   };
+  const cn = $('#copyName'); if (cn) cn.onclick = () => { navigator.clipboard.writeText($('#expName').textContent); toast('Nama disalin'); };
+  box.querySelectorAll('[data-manual]').forEach(b => b.onclick = async () => {
+    try {
+      await api(`/api/episodes/${ep.id}/scenes/${n}/manual`, { method: 'POST', body: { mode: b.dataset.manual } });
+      toast({ flow: 'Ditandai sudah dibuat di Flow. Klik Lanjutkan untuk mengunduh dan lanjut.', upload: 'Scene dilewati. Unggah videonya, lalu klik Lanjutkan.', auto: 'Scene kembali dibuat otomatis' }[b.dataset.manual]);
+      dlg.close(); load();
+    } catch (e) { toast(e.message, 1); }
+  });
   const rl = $('#resetLvl'); if (rl) rl.onclick = async () => { await api(`/api/episodes/${ep.id}/scenes/${n}`, { method: 'PUT', body: { fixLevel: 0, status: 'draft' } }); toast('Tingkat direset'); load(); };
   $('#frameFile').onchange = async e => { const fd = new FormData(); fd.append('file', e.target.files[0]); const which = +$('#lvlSel').value >= 2 ? 'single' : 'row'; await api(`/api/episodes/${ep.id}/scenes/${n}/frame?which=${which}`, { method: 'POST', body: fd }); toast('Frame diganti'); dlg.close(); load(); };
   $('#clipFile').onchange = async e => { const f = e.target.files[0]; if (!f) return; const fd = new FormData(); fd.append('file', f); toast('Mengunggah video…'); try { await api(`/api/episodes/${ep.id}/scenes/${n}/clip`, { method: 'POST', body: fd }); toast(`Video scene ${n} tersimpan`); dlg.close(); load(); } catch (err) { toast(err.message, 1); } };

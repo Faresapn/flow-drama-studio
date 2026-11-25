@@ -13,8 +13,8 @@ Daftar fitur. Centang (`[x]`) kalau sudah dikerjakan.
 - [x] **5. Antrean banyak episode** — plus 1 drama = 1 akun Google.
 - [x] **6. Generate ulang satu scene** — versi baru (`v2`, `v3`…), diunduh, episode digabung ulang.
 - [x] **7. Preview & potong sebelum digabung**
-- [x] **8. Judul, deskripsi, hashtag, dan thumbnail otomatis**
-- [x] **10. Peringatan tampilan Flow berubah** — screenshot + notifikasi.
+- [x] **8. Judul, deskripsi, hashtag, dan prompt thumbnail untuk ChatGPT**
+- [x] **10. Jeda otomatis kalau Flow macet** — screenshot + notifikasi, scene bisa dibuat manual, lalu lanjut ke scene berikutnya.
 - [x] **11. Statistik per drama dan per episode**
 - [x] **12. Gaya dan model Claude per drama**
 - [x] **13. Dashboard hanya bisa dibuka dari Mac sendiri**
@@ -33,3 +33,4 @@ Daftar fitur. Centang (`[x]`) kalau sudah dikerjakan.
 - [ ] **15. Pilih suara VO dari daftar** — ambil daftar suara ElevenLabs dan pilih di dashboard, tidak perlu salin Voice ID manual.
 - [ ] **16. Jadwal antrean** — jalan otomatis di jam tertentu (mis. malam), berhenti pagi.
 - [ ] **17. Ganti akun otomatis saat kredit habis** — kalau drama boleh pakai akun cadangan, pindah sendiri tanpa menunggu.
+- [ ] **18. Gambar thumbnail & storyboard otomatis** — butuh API gambar (OpenAI Images atau Google Gemini/Nano Banana). Prompt thumbnail sudah dibuat Claude, tinggal dikirim ke API.

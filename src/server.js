@@ -41,7 +41,7 @@ function applySeriesSettings(s, b) {
 }
 app.get('/api/options', (req, res) => res.json({ styles: Object.keys(autoprompt.STYLES), models: autoprompt.MODELS, voEnabled: vo.enabled() }));
 
-app.get('/api/state', (req, res) => res.json({ ...store.db, queue: pipeline.queue, runner: { running: runner.state.running, current: runner.state.current } }));
+app.get('/api/state', (req, res) => res.json({ ...store.db, queue: pipeline.queue, held: pipeline.held, paused: pipeline.paused, runner: { running: runner.state.running, current: runner.state.current } }));
 
 // 1 drama = 1 akun Google: akun yang dipilih harus ada.
 function checkAccount(id) {
@@ -212,7 +212,24 @@ app.post('/api/episodes/:id/scenes/:n/redo', wrap((req, res) => {
   res.json(pipeline.start(ep.id, { resume: true, onlyScenes: [sc.n] }));
 }));
 
-// Buat ulang judul, deskripsi, hashtag, dan thumbnail.
+// Scene dibuat manual di Flow:
+//  mode "flow"   = kamu sudah membuatnya di Flow dan memberi nama sesuai nama scene; app mengunduhnya.
+//  mode "upload" = lewati scene ini; videonya kamu unggah sendiri nanti.
+//  mode "auto"   = batalkan, kembali dibuat otomatis.
+app.post('/api/episodes/:id/scenes/:n/manual', wrap((req, res) => {
+  const ep = store.episode(req.params.id); if (!ep) throw new Error('Episode tidak ada');
+  const sc = store.scene(ep.id, req.params.n); if (!sc) throw new Error('Scene tidak ada');
+  if (pipeline.isActive(ep.id) && runner.state.running) throw new Error('Episode ini sedang diproses. Tunggu sampai dijeda atau selesai.');
+  const mode = req.body && req.body.mode;
+  sc.pauseReason = null; sc.lastError = null;
+  if (mode === 'flow') { sc.manual = false; sc.flowName = runner.sceneVideoName(ep, sc); sc.status = 'done'; }
+  else if (mode === 'upload') { sc.manual = true; sc.status = 'manual'; }
+  else if (mode === 'auto') { sc.manual = false; sc.status = 'draft'; sc.fixLevel = 0; }
+  else throw new Error('Mode tidak dikenal');
+  store.save(); res.json({ scene: sc, flowName: runner.sceneVideoName(ep, sc) });
+}));
+
+// Buat ulang judul, deskripsi, hashtag, dan prompt thumbnail.
 app.post('/api/episodes/:id/meta', wrap(async (req, res) => {
   const ep = store.episode(req.params.id); if (!ep) throw new Error('Episode tidak ada');
   res.json(await pipeline.makeMeta(ep));

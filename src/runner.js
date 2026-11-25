@@ -488,7 +488,7 @@ async function runScene(ep, scene) {
     if (!frameRel) { scene.status = 'failed'; scene.lastError = 'Start frame belum ada'; store.save(); return; }
     const frameAbs = path.join(store.DATA_DIR, frameRel);
 
-    scene.status = 'running'; store.save();
+    scene.status = 'running'; scene.pauseReason = null; store.save();
     state.current = { episode: ep.title, scene: scene.n, level: built.level, levelName: built.levelName };
     log(`${ep.title} · Scene ${scene.n} · percobaan ${scene.attempts.length + 1} · level ${built.level} (${built.levelName})`);
 
@@ -541,6 +541,11 @@ async function runScene(ep, scene) {
         log(`Scene ${scene.n}: ${r.error}`);
       } else if (r.kind === 'stopped') {
         scene.status = 'queued';
+      } else if (r.kind === 'timeout') {
+        // Video tidak muncul: jangan coba terus, jeda supaya bisa dibuat manual.
+        scene.status = 'failed'; scene.lastError = r.error; scene.pauseReason = 'timeout';
+        state.stopRequested = true;
+        log(`Scene ${scene.n}: ${r.error}. Antrean dijeda.`);
       } else {
         scene.fixLevel = prompt.nextLevel(scene.fixLevel, r.kind);
         scene.status = 'queued';
@@ -549,12 +554,13 @@ async function runScene(ep, scene) {
     } catch (e) {
       attempt.result = 'error'; attempt.error = e.message;
       scene.attempts.push(attempt);
-      scene.status = 'failed'; scene.lastError = e.message;
-      log(`Scene ${scene.n}: ERROR otomasi: ${e.message}. Cek selector di config/flow.json.`);
+      scene.status = 'failed'; scene.lastError = e.message; scene.pauseReason = 'flow';
+      state.stopRequested = true; // jeda: scene berikutnya tidak dicoba sampai kamu lanjutkan
+      log(`Scene ${scene.n}: ERROR otomasi: ${e.message}. Antrean dijeda. Cek selector di config/flow.json.`);
       // Kemungkinan tampilan Flow berubah: simpan screenshot dan beri tahu.
       const shot = await flowScreenshot(`${ep.id}_scene${scene.n}`);
       scene.lastScreenshot = shot ? path.relative(store.DATA_DIR, shot).split(path.sep).join('/') : null;
-      notify('Tampilan Flow mungkin berubah', `${ep.title} scene ${scene.n}: ${e.message.split('\n')[0].slice(0, 160)}. Jalankan npm run calibrate.${shot ? ` Screenshot: ${shot}` : ''}`, shot);
+      notify('Tampilan Flow mungkin berubah, antrean dijeda', `${ep.title} scene ${scene.n}: ${e.message.split('\n')[0].slice(0, 160)}. Buat scene ini manual atau jalankan npm run calibrate.${shot ? ` Screenshot: ${shot}` : ''}`, shot);
       store.save();
       return;
     }
@@ -598,4 +604,4 @@ function stop() { state.stopRequested = true; log('Permintaan berhenti diterima,
 
 async function close() { if (context) await context.close().catch(() => {}); context = null; page = null; }
 
-module.exports = { state, log, activeAccount, switchAccount, ensureAccount, accountById, addAccount, downloadEpisode, newTileIndex, downloadNewVideo, downloadTile, renameTile, videoSrcs, runQueue, runSteps, stop, openFlow, createProject, ensureProject, close, loadCfg, get page() { return page; } };
+module.exports = { sceneVideoName, state, log, activeAccount, switchAccount, ensureAccount, accountById, addAccount, downloadEpisode, newTileIndex, downloadNewVideo, downloadTile, renameTile, videoSrcs, runQueue, runSteps, stop, openFlow, createProject, ensureProject, close, loadCfg, get page() { return page; } };

@@ -115,36 +115,38 @@ async function autoFill(series, ep, storyboardAbs, log = () => {}) {
 }
 
 /**
- * Judul, deskripsi, hashtag, dan pilihan thumbnail untuk episode jadi.
- * frames: path absolut kandidat thumbnail (jpg). Mengembalikan {title, description, hashtags, thumbnail}.
+ * Judul, deskripsi, hashtag, dan prompt thumbnail (gambar thumbnail dibuat sendiri di ChatGPT).
+ * refs: path absolut gambar referensi (sheet tokoh, storyboard) untuk dibaca Claude.
+ * Mengembalikan {title, description, hashtags, thumbnailPrompt, thumbnailText}.
  */
-async function episodeMeta(series, ep, frames, cwd) {
+async function episodeMeta(series, ep, refs, cwd) {
   const script = ep.scenes.map(sc => `Scene ${sc.n} (${sc.title}): ${sc.setting || ''}\n` +
     sc.shots.map((x, i) => `  ${i + 1}. ${x.action || ''}${x.dialogue ? ` — "${x.dialogue}"` : ''}`).join('\n')).join('\n');
+  const chars = (series.characters || []).map(c => `- ${c.role}: ${c.look}`).join('\n');
   const instr = `You prepare a YouTube Shorts / TikTok upload for one episode of a short vertical Indonesian family drama.
 
 Series: ${series.title}
 Episode: ${ep.title}
+Characters:
+${chars || '(see reference images)'}
 Script:
 ${script}
-
-Thumbnail candidates (read each image file):
-${frames.map((f, i) => `${i}: ${f}`).join('\n')}
-
-Write in natural Indonesian:
-- title: catchy, max 70 characters, no clickbait lies, may use 1 emoji.
-- description: 2-3 short sentences that tease the story without spoiling the ending, then a question to invite comments.
+${refs.length ? `\nReference images (read them for faces, outfits and places):\n${refs.join('\n')}\n` : ''}
+Write:
+- title (Indonesian): catchy, max 70 characters, no clickbait lies, may use 1 emoji.
+- description (Indonesian): 2-3 short sentences that tease the story without spoiling the ending, then a question to invite comments.
 - hashtags: 5-8 relevant hashtags (with #), include #drama and #shorts.
-- thumbnail: index of the most striking candidate (clear emotional face, not blurry, no storyboard collage, no text).
+- thumbnailPrompt (English): a ready-to-paste prompt for ChatGPT image generation. Vertical 9:16, photorealistic, cinematic. Show the most dramatic moment of this episode with the main characters, describing each character's face, age, hair or hijab and outfit concretely so they match the series, plus expression, pose, setting and lighting. Strong emotion readable at small size, simple background, space at the top for a text overlay. Do not ask for any text or letters in the image.
+- thumbnailText (Indonesian): 2-5 word hook to place on the thumbnail, uppercase.
 
-Reply with ONLY this JSON: {"title":"...","description":"...","hashtags":["#..."],"thumbnail":0}`;
+Reply with ONLY this JSON: {"title":"...","description":"...","hashtags":["#..."],"thumbnailPrompt":"...","thumbnailText":"..."}`;
   const j = extractJson(await askClaude(instr, cwd, 300000, (series.style || {}).model || ''));
-  const idx = Number.isInteger(j.thumbnail) && j.thumbnail >= 0 && j.thumbnail < frames.length ? j.thumbnail : 0;
   return {
     title: String(j.title || '').slice(0, 100),
     description: String(j.description || '').slice(0, 2000),
     hashtags: (Array.isArray(j.hashtags) ? j.hashtags : []).map(String).filter(h => h.startsWith('#')).slice(0, 10),
-    thumbnail: idx,
+    thumbnailPrompt: String(j.thumbnailPrompt || '').slice(0, 3000),
+    thumbnailText: String(j.thumbnailText || '').slice(0, 60),
   };
 }
 
