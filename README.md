@@ -26,6 +26,7 @@ Semua data tersimpan di komputer sendiri (`data/`). Tidak ada server luar selain
 - [Struktur folder](#struktur-folder)
 - [Uji](#uji)
 - [Masalah umum](#masalah-umum)
+- [Saran fitur & rencana update](SARAN.md)
 
 ---
 
