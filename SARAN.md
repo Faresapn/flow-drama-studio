@@ -28,9 +28,12 @@ Daftar fitur. Centang (`[x]`) kalau sudah dikerjakan.
   - **TikTok:** Content Posting API butuh aplikasi developer yang disetujui TikTok. Sebelum disetujui, video hanya bisa diunggah sebagai privat/draft.
   Kalau sudah siap minimal untuk YouTube, fitur ini bisa ditambahkan: unggah video + judul + deskripsi + hashtag + thumbnail + subtitle `.srt` yang sudah dibuat otomatis.
 
+## Coming soon
+
+- [ ] **18. Gambar thumbnail & storyboard otomatis** — butuh API gambar (OpenAI Images atau Google Gemini/Nano Banana). Prompt thumbnail sudah dibuat Claude, tinggal dikirim ke API.
+
 ## Ide berikutnya
 
 - [ ] **15. Pilih suara VO dari daftar** — ambil daftar suara ElevenLabs dan pilih di dashboard, tidak perlu salin Voice ID manual.
 - [ ] **16. Jadwal antrean** — jalan otomatis di jam tertentu (mis. malam), berhenti pagi.
 - [ ] **17. Ganti akun otomatis saat kredit habis** — kalau drama boleh pakai akun cadangan, pindah sendiri tanpa menunggu.
-- [ ] **18. Gambar thumbnail & storyboard otomatis** — butuh API gambar (OpenAI Images atau Google Gemini/Nano Banana). Prompt thumbnail sudah dibuat Claude, tinggal dikirim ke API.
