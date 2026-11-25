@@ -1,0 +1,16 @@
+node_modules/
+browser-profile/
+data/episodes/
+data/tmp/
+.env
+.env.*
+.DS_Store
+*.log
+*.png
+*.jpg
+*.jpeg
+*.webp
+*.gif
+*.mp4
+*.mov
+*.webm

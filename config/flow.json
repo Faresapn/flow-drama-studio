@@ -1,0 +1,148 @@
+{
+  "_catatan": "Selector di bawah adalah tebakan awal untuk UI Google Flow dan HARUS dikalibrasi sekali (lihat README bagian Kalibrasi). Kalau UI Flow berubah, cukup ubah file ini, tidak perlu ubah kode.",
+  "flowUrl": "https://flow.google.com/",
+  "project": {
+    "_catatan": "Tiap serial baru otomatis dibuatkan project Flow sendiri. Antrean memakai project milik serialnya.",
+    "homeUrl": "https://flow.google.com/",
+    "newButton": "button:has-text('Project baru'), button:has-text('New project')",
+    "titleInput": "input[aria-label='Teks yang dapat diedit'], input[aria-label='Editable text']"
+  },
+  "browserChannel": "chrome",
+  "profileDir": "./browser-profile",
+  "maxAttemptsPerScene": 5,
+  "pauseBetweenScenesSec": [
+    20,
+    45
+  ],
+  "steps": [
+    {
+      "do": "goto",
+      "url": "{flowUrl}",
+      "onlyIfNotOnUrl": true
+    },
+    {
+      "do": "waitFor",
+      "selector": "[role='textbox'][aria-label='Apa yang ingin Anda buat?'], [role='textbox'][aria-label='What do you want to create?'], [role='textbox']",
+      "timeoutSec": 90
+    },
+    {
+      "do": "click",
+      "selector": "button[aria-label='Buka histori sesi'], button[aria-label='Open session history']",
+      "optional": true,
+      "timeoutSec": 10
+    },
+    {
+      "do": "click",
+      "selector": "button:has-text('Buat sesi baru'), button:has-text('New session')",
+      "optional": true,
+      "timeoutSec": 8
+    },
+    {
+      "do": "waitFor",
+      "selector": "[role='textbox'][aria-label='Apa yang ingin Anda buat?'], [role='textbox'][aria-label='What do you want to create?'], [role='textbox']",
+      "timeoutSec": 30
+    },
+    {
+      "do": "upload",
+      "via": "chooser",
+      "file": "{startFrame}",
+      "open": "button[aria-label='Tambahkan bahan ke kotak perintah'], button[aria-label='Add ingredients to prompt box']",
+      "trigger": "button:has-text('Upload media')",
+      "agree": "button:has-text('Saya setuju'), button:has-text('I agree')",
+      "pick": "[role='option']:has-text('{fileName}')",
+      "timeoutSec": 60,
+      "confirm": "button:has-text('Tambahkan ke perintah'), button:has-text('Add to prompt')",
+      "attached": "button[aria-label='Bahan'], button[aria-label='Ingredient'], button[aria-label='Ingredients']"
+    },
+    {
+      "do": "type",
+      "selector": "[role='textbox'][aria-label='Apa yang ingin Anda buat?'], [role='textbox'][aria-label='What do you want to create?'], [role='textbox']",
+      "text": "{prompt}",
+      "clear": true
+    },
+    {
+      "do": "click",
+      "selector": "button[aria-label='Mulai pembuatan'], button[aria-label*='Generate' i], button:has-text('arrow_forward')"
+    }
+  ],
+  "result": {
+    "failTexts": [
+      "melanggar kebijakan",
+      "Pembuatan audio gagal",
+      "Pembuatan ini mungkin",
+      "might violate",
+      "violates our policies",
+      "Audio generation failed",
+      "Generation failed"
+    ],
+    "audioFailTexts": [
+      "Pembuatan audio gagal",
+      "Audio generation failed"
+    ],
+    "successSelector": "flow-video-tile img.thumbnail",
+    "timeoutSec": 1200,
+    "pollSec": 10,
+    "approveSelectors": [
+      "text='Selalu setujui di project'",
+      "text='Always approve in project'",
+      "text='Setujui'",
+      "text='Approve'"
+    ],
+    "rejectStaleSelectors": [
+      "text='Tolak'",
+      "text='Reject'",
+      "text='Decline'"
+    ],
+    "download": {
+      "tile": "flow-grid-tile-container:has(flow-video-tile)",
+      "thumb": "flow-video-tile img",
+      "more": "button[aria-label='Opsi lainnya'], button[aria-label='More options']",
+      "item": "[role=menuitem]:has-text('Download')",
+      "quality": "[role=menuitem]:has-text('720p')"
+    },
+    "questionTexts": [
+      "Which approach would you prefer",
+      "Which option would you prefer",
+      "Pendekatan mana yang",
+      "Opsi mana yang",
+      "Mana yang Anda pilih"
+    ],
+    "questionReply": "generate_video_with_references",
+    "pendingSelector": "flow-pending-tile",
+    "creditTexts": [
+      "kredit tidak cukup",
+      "kredit Anda tidak cukup",
+      "kehabisan kredit",
+      "not enough credits",
+      "out of credits",
+      "insufficient credits"
+    ]
+  },
+  "human": {
+    "typingMode": "type",
+    "charDelayMs": [
+      28,
+      95
+    ],
+    "pauseAfterPunctuationMs": [
+      120,
+      420
+    ],
+    "thinkingPauseChance": 0.015,
+    "thinkingPauseMs": [
+      600,
+      1800
+    ],
+    "typoChance": 0.006,
+    "mixedTypeFirstChars": 180,
+    "mouseSteps": [
+      18,
+      40
+    ],
+    "actionPauseMs": [
+      700,
+      2200
+    ],
+    "idleWanderChance": 0.35
+  }
+}

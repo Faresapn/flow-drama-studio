@@ -1,0 +1,19 @@
+{
+  "name": "flow-drama-studio",
+  "version": "1.0.0",
+  "description": "Dashboard lokal untuk produksi drama pendek AI: crop storyboard, prompt per scene, generate otomatis di Google Flow (Playwright, gaya manusia), retry dengan aturan perbaikan, dan gabung video.",
+  "main": "src/server.js",
+  "type": "commonjs",
+  "scripts": {
+    "start": "node src/server.js",
+    "calibrate": "node src/calibrate.js",
+    "test": "node test/run-tests.js",
+    "test:runner": "node test/runner-test.js"
+  },
+  "dependencies": {
+    "express": "^4.21.2",
+    "multer": "^1.4.5-lts.1",
+    "playwright": "^1.49.1",
+    "sharp": "^0.33.5"
+  }
+}

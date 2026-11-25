@@ -1,0 +1,23 @@
+<!doctype html><html><body style="font-family:sans-serif;padding:30px">
+<h3>Mock Flow</h3>
+<button id="ftv">Frames to Video</button>
+<input type="file" id="f">
+<textarea id="p" rows="6" cols="80" placeholder="Prompt"></textarea>
+<button aria-label="Generate" id="go">Generate</button>
+<div id="out"></div>
+<script>
+let n = 0;
+document.getElementById('go').onclick = () => {
+  n++;
+  const prompt = document.getElementById('p').value;
+  const hasFile = document.getElementById('f').files.length;
+  window.__last = { prompt, hasFile, n };
+  setTimeout(() => {
+    const d = document.createElement('div');
+    if (n === 1) d.textContent = 'Gagal. Pembuatan ini mungkin melanggar kebijakan kami.';
+    else if (n === 2) d.textContent = 'Gagal. Pembuatan audio gagal. Coba perintah lain.';
+    else { d.innerHTML = '<video src="" width=100></video>'; }
+    document.getElementById('out').appendChild(d);
+  }, 1500);
+};
+</script></body></html>

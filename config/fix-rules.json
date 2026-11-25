@@ -1,0 +1,299 @@
+{
+  "_catatan": "Aturan perbaikan prompt, disusun dari kasus gagal/berhasil di serial Suami Kurir, Anak yang Dibuang, dan Suami Pelit. Tangga dijalankan berurutan: setiap kali scene gagal, level naik satu.",
+  "ladder": [
+    {
+      "level": 0,
+      "name": "Prompt asli",
+      "desc": "Strip storyboard sebagai start frame, prompt lengkap."
+    },
+    {
+      "level": 1,
+      "name": "Haluskan kata",
+      "desc": "Ganti kata rawan (lempar, marah, uang, kamar tidur, dll) dengan versi netral; bersihkan daftar Avoid dari kata seperti violence/weapons."
+    },
+    {
+      "level": 2,
+      "name": "Foto tunggal + prompt ringkas",
+      "desc": "Start frame diganti foto shot 1 saja (bukan strip kolase), instruksi storyboard dihapus, daftar Avoid dipendekkan."
+    },
+    {
+      "level": 3,
+      "name": "Haluskan dialog",
+      "desc": "Kalimat dialog yang menyebut uang/nominal/pecat/cerai/hinaan dibuang dari prompt (dicatat untuk VO)."
+    },
+    {
+      "level": 4,
+      "name": "Tanpa dialog",
+      "desc": "Semua dialog dihapus, audio hanya ambience + musik. Dialog dicatat untuk VO saat penggabungan."
+    },
+    {
+      "level": 5,
+      "name": "Cek manual",
+      "desc": "Semua tangga habis. Scene ditandai untuk kamu periksa."
+    }
+  ],
+  "audioFailJumpTo": 3,
+  "replacements": [
+    [
+      "(?:one |a |an )?Rp ?\\d[\\d.]* (?:banknotes?|notes?|bills?)",
+      "a folded paper"
+    ],
+    [
+      "Rp ?\\d[\\d.]*",
+      "a small amount"
+    ],
+    [
+      "angrily throws",
+      "firmly places"
+    ],
+    [
+      "throws",
+      "places"
+    ],
+    [
+      "throwing",
+      "placing"
+    ],
+    [
+      "throw",
+      "place"
+    ],
+    [
+      "slams",
+      "places firmly"
+    ],
+    [
+      "slapping",
+      "placing firmly"
+    ],
+    [
+      "slaps",
+      "places firmly"
+    ],
+    [
+      "shoves",
+      "holds out"
+    ],
+    [
+      "pushes",
+      "hands"
+    ],
+    [
+      "grabs",
+      "takes"
+    ],
+    [
+      "snatches",
+      "takes"
+    ],
+    [
+      "shouts",
+      "says firmly"
+    ],
+    [
+      "shouting",
+      "speaking firmly"
+    ],
+    [
+      "yells",
+      "says firmly"
+    ],
+    [
+      "screams",
+      "gasps"
+    ],
+    [
+      "furious",
+      "upset"
+    ],
+    [
+      "angrily",
+      "firmly"
+    ],
+    [
+      "angry",
+      "upset"
+    ],
+    [
+      "rage",
+      "frustration"
+    ],
+    [
+      "disgusted",
+      "unhappy"
+    ],
+    [
+      "disgust",
+      "displeasure"
+    ],
+    [
+      "mocking",
+      "teasing"
+    ],
+    [
+      "mockingly",
+      "teasingly"
+    ],
+    [
+      "humiliat\\w*",
+      "embarrassed"
+    ],
+    [
+      "cunning",
+      "thoughtful"
+    ],
+    [
+      "sly",
+      "slight"
+    ],
+    [
+      "sneer\\w*",
+      "smirk"
+    ],
+    [
+      "secretive",
+      "quiet"
+    ],
+    [
+      "secretly",
+      "quietly"
+    ],
+    [
+      "eavesdrop\\w*",
+      "overhears"
+    ],
+    [
+      "spying",
+      "watching"
+    ],
+    [
+      "threaten\\w*",
+      "warns"
+    ],
+    [
+      "the money",
+      "it"
+    ],
+    [
+      "some money",
+      "something"
+    ],
+    [
+      "money",
+      "it"
+    ],
+    [
+      "folded banknotes",
+      "folded papers"
+    ],
+    [
+      "banknotes",
+      "papers"
+    ],
+    [
+      "banknote",
+      "small paper"
+    ],
+    [
+      "cash drawer",
+      "drawer"
+    ],
+    [
+      "cash register",
+      "counter"
+    ],
+    [
+      "lies on the bed",
+      "sits on a chair"
+    ],
+    [
+      "lying on the bed",
+      "sitting on a chair"
+    ],
+    [
+      "on the bed",
+      "on a chair"
+    ],
+    [
+      "bedroom",
+      "room"
+    ],
+    [
+      "gets fired",
+      "loses his job"
+    ],
+    [
+      "fired",
+      "let go"
+    ],
+    [
+      "divorce papers",
+      "papers"
+    ],
+    [
+      "divorce",
+      "separation"
+    ],
+    [
+      "crying loudly",
+      "teary"
+    ],
+    [
+      "sobbing",
+      "teary"
+    ],
+    [
+      "trembling with fear",
+      "worried"
+    ]
+  ],
+  "avoidBlacklist": [
+    "weapons",
+    "weapon",
+    "violence",
+    "violent",
+    "blood",
+    "gore",
+    "physical aggression",
+    "aggression",
+    "hitting",
+    "pushing",
+    "fighting",
+    "physical fighting",
+    "physical violence",
+    "throwing money",
+    "money flying",
+    "throwing food",
+    "plates breaking",
+    "shouting at the child",
+    "nudity",
+    "sexual"
+  ],
+  "shortAvoid": "Avoid: text on screen, subtitles, cartoon style, distorted faces, extra fingers, extra people, changing outfits.",
+  "riskyDialogueWords": [
+    "uang",
+    "duit",
+    "juta",
+    "ribu",
+    "miliar",
+    "rupiah",
+    "transfer",
+    "gaji",
+    "utang",
+    "hutang",
+    "pecat",
+    "cerai",
+    "tanda tangan",
+    "bunuh",
+    "mati",
+    "bodoh",
+    "goblok",
+    "sampah",
+    "miskin",
+    "babu",
+    "selingkuh",
+    "pelakor",
+    "usir",
+    "keluar dari rumah"
+  ]
+}

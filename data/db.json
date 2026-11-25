@@ -1,0 +1,997 @@
+{
+  "series": [
+    {
+      "id": "75e6583d",
+      "title": "UJI Otomatis",
+      "characters": [
+        {
+          "key": "W",
+          "role": "The wife",
+          "look": "Indonesian woman, 30, pink hijab"
+        },
+        {
+          "key": "S",
+          "role": "The warung owner",
+          "look": "Indonesian woman, 55, brown hijab, green batik long-sleeve blouse"
+        },
+        {
+          "key": "H",
+          "role": "The husband",
+          "look": "Indonesian man, 33, short neat black hair, light grey button-up work shirt"
+        },
+        {
+          "key": "D",
+          "role": "The little daughter",
+          "look": "Indonesian girl, 5, black hair in pigtails, yellow t-shirt"
+        },
+        {
+          "key": "C",
+          "role": "The customer",
+          "look": "Indonesian woman, 30, black hair in ponytail, blue long-sleeve shirt"
+        }
+      ],
+      "createdAt": 1795492869797,
+      "flowProjectStatus": "ok",
+      "flowProjectUrl": "https://flow.google.com/project/b37f72fa-3c57-421c-a17b-c1a737909bb1",
+      "flowProjectError": null
+    },
+    {
+      "id": "d3e76685",
+      "title": "Pelakor Berkedok Sahabat",
+      "characters": [
+        {
+          "key": "W",
+          "role": "The wife",
+          "look": "Indonesian woman, 32, sage green hijab, cream long-sleeve blouse with light embroidery"
+        },
+        {
+          "key": "F",
+          "role": "The wife's best friend",
+          "look": "Indonesian woman, 32, long wavy dark brown hair, no hijab, red button-up blouse, gold hoop earrings"
+        },
+        {
+          "key": "H",
+          "role": "The husband",
+          "look": "Indonesian man, 35, short neat black hair, navy blue polo shirt"
+        },
+        {
+          "key": "D",
+          "role": "The little daughter",
+          "look": "Indonesian girl, 7, black shoulder-length bob hair, light blue t-shirt"
+        }
+      ],
+      "createdAt": 1795502466241,
+      "flowProjectStatus": "ok",
+      "characterSheet": "series/d3e76685/d3e76685_sheet_1795502466300.png",
+      "flowProjectUrl": "https://flow.google.com/project/4c42757e-198a-4a70-8da3-65915d66686e",
+      "flowProjectError": null
+    }
+  ],
+  "episodes": [
+    {
+      "id": "d79a0507",
+      "seriesId": "75e6583d",
+      "title": "Kue Pertama",
+      "storyboard": "episodes/d79a0507/storyboard.png",
+      "scenes": [
+        {
+          "n": 1,
+          "title": "Subuh di Dapur",
+          "startFrame": "episodes/d79a0507/frames/Scene_1.png",
+          "singleFrame": "episodes/d79a0507/frames/Scene_1_foto1.png",
+          "setting": "Simple wooden village kitchen before dawn, dim blue light with one warm hanging bulb.",
+          "characters": [
+            "W"
+          ],
+          "shots": [
+            {
+              "action": "The wife stands alone in the dark kitchen, medium shot, looking at the counter.",
+              "dialogue": "Semoga hari ini laku, ya Allah."
+            },
+            {
+              "action": "The wife stirs batter in a green bowl, medium close-up.",
+              "dialogue": ""
+            },
+            {
+              "action": "Close-up of batter poured from a ladle into pink cupcake moulds on a tray.",
+              "dialogue": ""
+            },
+            {
+              "action": "Close-up of golden steamed cakes on a metal tray.",
+              "dialogue": ""
+            },
+            {
+              "action": "The wife holds the tray of cakes and smiles faintly, medium shot.",
+              "dialogue": "Alhamdulillah, jadi juga."
+            }
+          ],
+          "audio": "quiet pre-dawn kitchen, roosters far away, soft hopeful piano",
+          "customPrompt": "",
+          "status": "done",
+          "fixLevel": 1,
+          "needsVO": [],
+          "attempts": [
+            {
+              "at": "2026-11-24T04:28:28.304Z",
+              "level": 0,
+              "levelName": "Prompt asli",
+              "frame": "row",
+              "prompt": "Model: Google Omni Flow 1.2. Aspect ratio: 9:16 vertical. Duration: 10 seconds. Use the start frame provided.\n\nSTORYBOARD INSTRUCTION: The start frame is a storyboard strip with a red \"SCENE 1\" label box on the left and 5 numbered photos with captions, read from left to right. Treat it only as the shot plan. Immediately cut to shot 1 as a single full-frame 9:16 image. Recreate each of the 5 photos in order as one 2-second shot, copying its framing, camera angle, people, faces, outfits and lighting. No extra wide shots and no extra people. Never show the storyboard layout, label box, captions, numbers, borders or split screens after the first frame. Never write any names or words on screen.\n\nSETTING: Simple wooden village kitchen before dawn, dim blue light with one warm hanging bulb. Hard cuts every 2 seconds.\n\nCHARACTERS (identical in every shot):\n- The wife: Indonesian woman, 30, pink hijab\n\nSHOTS (follow the photos 1–5):\n[00:00–00:02] Shot 1: The wife stands alone in the dark kitchen, medium shot, looking at the counter.: \"Semoga hari ini laku, ya Allah.\"\n[00:02–00:04] Shot 2: The wife stirs batter in a green bowl, medium close-up.. No dialogue.\n[00:04–00:06] Shot 3: Close-up of batter poured from a ladle into pink cupcake moulds on a tray.. No dialogue.\n[00:06–00:08] Shot 4: Close-up of golden steamed cakes on a metal tray.. No dialogue.\n[00:08–00:10] Shot 5: The wife holds the tray of cakes and smiles faintly, medium shot.: \"Alhamdulillah, jadi juga.\"\n\nAUDIO: quiet pre-dawn kitchen, roosters far away, soft hopeful piano. Natural Indonesian voices, lip-synced.\n\nAvoid: daylight, other people, modern appliances, text on screen, captions, subtitles, storyboard layout, split screen, cartoon, anime, distorted faces, deformed hands, extra fingers, faces changing between shots, changing outfits, extra people, brand logos, watermark, blurry, morphing, flickering, English speech.",
+              "result": "error",
+              "error": "Cannot read properties of null (reading 'locator')"
+            },
+            {
+              "at": "2026-11-24T04:33:29.491Z",
+              "level": 0,
+              "levelName": "Prompt asli",
+              "frame": "row",
+              "prompt": "Model: Google Omni Flow 1.2. Aspect ratio: 9:16 vertical. Duration: 10 seconds. Use the start frame provided.\n\nSTORYBOARD INSTRUCTION: The start frame is a storyboard strip with a red \"SCENE 1\" label box on the left and 5 numbered photos with captions, read from left to right. Treat it only as the shot plan. Immediately cut to shot 1 as a single full-frame 9:16 image. Recreate each of the 5 photos in order as one 2-second shot, copying its framing, camera angle, people, faces, outfits and lighting. No extra wide shots and no extra people. Never show the storyboard layout, label box, captions, numbers, borders or split screens after the first frame. Never write any names or words on screen.\n\nSETTING: Simple wooden village kitchen before dawn, dim blue light with one warm hanging bulb. Hard cuts every 2 seconds.\n\nCHARACTERS (identical in every shot):\n- The wife: Indonesian woman, 30, pink hijab\n\nSHOTS (follow the photos 1–5):\n[00:00–00:02] Shot 1: The wife stands alone in the dark kitchen, medium shot, looking at the counter.: \"Semoga hari ini laku, ya Allah.\"\n[00:02–00:04] Shot 2: The wife stirs batter in a green bowl, medium close-up.. No dialogue.\n[00:04–00:06] Shot 3: Close-up of batter poured from a ladle into pink cupcake moulds on a tray.. No dialogue.\n[00:06–00:08] Shot 4: Close-up of golden steamed cakes on a metal tray.. No dialogue.\n[00:08–00:10] Shot 5: The wife holds the tray of cakes and smiles faintly, medium shot.: \"Alhamdulillah, jadi juga.\"\n\nAUDIO: quiet pre-dawn kitchen, roosters far away, soft hopeful piano. Natural Indonesian voices, lip-synced.\n\nAvoid: daylight, other people, modern appliances, text on screen, captions, subtitles, storyboard layout, split screen, cartoon, anime, distorted faces, deformed hands, extra fingers, faces changing between shots, changing outfits, extra people, brand logos, watermark, blurry, morphing, flickering, English speech.",
+              "result": "error",
+              "error": "locator.count: Target page, context or browser has been closed"
+            },
+            {
+              "at": "2026-11-24T04:34:31.572Z",
+              "level": 0,
+              "levelName": "Prompt asli",
+              "frame": "row",
+              "prompt": "Model: Google Omni Flow 1.2. Aspect ratio: 9:16 vertical. Duration: 10 seconds. Use the start frame provided.\n\nSTORYBOARD INSTRUCTION: The start frame is a storyboard strip with a red \"SCENE 1\" label box on the left and 5 numbered photos with captions, read from left to right. Treat it only as the shot plan. Immediately cut to shot 1 as a single full-frame 9:16 image. Recreate each of the 5 photos in order as one 2-second shot, copying its framing, camera angle, people, faces, outfits and lighting. No extra wide shots and no extra people. Never show the storyboard layout, label box, captions, numbers, borders or split screens after the first frame. Never write any names or words on screen.\n\nSETTING: Simple wooden village kitchen before dawn, dim blue light with one warm hanging bulb. Hard cuts every 2 seconds.\n\nCHARACTERS (identical in every shot):\n- The wife: Indonesian woman, 30, pink hijab\n\nSHOTS (follow the photos 1–5):\n[00:00–00:02] Shot 1: The wife stands alone in the dark kitchen, medium shot, looking at the counter.: \"Semoga hari ini laku, ya Allah.\"\n[00:02–00:04] Shot 2: The wife stirs batter in a green bowl, medium close-up.. No dialogue.\n[00:04–00:06] Shot 3: Close-up of batter poured from a ladle into pink cupcake moulds on a tray.. No dialogue.\n[00:06–00:08] Shot 4: Close-up of golden steamed cakes on a metal tray.. No dialogue.\n[00:08–00:10] Shot 5: The wife holds the tray of cakes and smiles faintly, medium shot.: \"Alhamdulillah, jadi juga.\"\n\nAUDIO: quiet pre-dawn kitchen, roosters far away, soft hopeful piano. Natural Indonesian voices, lip-synced.\n\nAvoid: daylight, other people, modern appliances, text on screen, captions, subtitles, storyboard layout, split screen, cartoon, anime, distorted faces, deformed hands, extra fingers, faces changing between shots, changing outfits, extra people, brand logos, watermark, blurry, morphing, flickering, English speech.",
+              "result": "error",
+              "error": "Cannot read properties of null (reading 'locator')"
+            },
+            {
+              "at": "2026-11-24T04:46:30.384Z",
+              "level": 0,
+              "levelName": "Prompt asli",
+              "frame": "row",
+              "prompt": "Model: Google Omni Flow 1.2. Aspect ratio: 9:16 vertical. Duration: 10 seconds. Use the start frame provided.\n\nSTORYBOARD INSTRUCTION: The start frame is a storyboard strip with a red \"SCENE 1\" label box on the left and 5 numbered photos with captions, read from left to right. Treat it only as the shot plan. Immediately cut to shot 1 as a single full-frame 9:16 image. Recreate each of the 5 photos in order as one 2-second shot, copying its framing, camera angle, people, faces, outfits and lighting. No extra wide shots and no extra people. Never show the storyboard layout, label box, captions, numbers, borders or split screens after the first frame. Never write any names or words on screen.\n\nSETTING: Simple wooden village kitchen before dawn, dim blue light with one warm hanging bulb. Hard cuts every 2 seconds.\n\nCHARACTERS (identical in every shot):\n- The wife: Indonesian woman, 30, pink hijab\n\nSHOTS (follow the photos 1–5):\n[00:00–00:02] Shot 1: The wife stands alone in the dark kitchen, medium shot, looking at the counter.: \"Semoga hari ini laku, ya Allah.\"\n[00:02–00:04] Shot 2: The wife stirs batter in a green bowl, medium close-up.. No dialogue.\n[00:04–00:06] Shot 3: Close-up of batter poured from a ladle into pink cupcake moulds on a tray.. No dialogue.\n[00:06–00:08] Shot 4: Close-up of golden steamed cakes on a metal tray.. No dialogue.\n[00:08–00:10] Shot 5: The wife holds the tray of cakes and smiles faintly, medium shot.: \"Alhamdulillah, jadi juga.\"\n\nAUDIO: quiet pre-dawn kitchen, roosters far away, soft hopeful piano. Natural Indonesian voices, lip-synced.\n\nAvoid: daylight, other people, modern appliances, text on screen, captions, subtitles, storyboard layout, split screen, cartoon, anime, distorted faces, deformed hands, extra fingers, faces changing between shots, changing outfits, extra people, brand logos, watermark, blurry, morphing, flickering, English speech.",
+              "result": "timeout",
+              "error": "Tidak ada hasil setelah 480 detik"
+            }
+          ],
+          "clip": "episodes/d79a0507/clips/scene_1.mp4",
+          "avoid": "daylight, other people, modern appliances",
+          "lastError": "Cannot read properties of null (reading 'locator')"
+        },
+        {
+          "n": 2,
+          "title": "Titip di Warung",
+          "startFrame": "episodes/d79a0507/frames/Scene_2.png",
+          "singleFrame": "episodes/d79a0507/frames/Scene_2_foto1.png",
+          "setting": "Small village street warung with wooden shelves and glass display case, early morning soft daylight.",
+          "characters": [
+            "W",
+            "S"
+          ],
+          "shots": [
+            {
+              "action": "The wife walks along the street carrying a covered tray, medium shot.",
+              "dialogue": ""
+            },
+            {
+              "action": "The wife greets the warung owner at the counter, two-shot.",
+              "dialogue": "Bu Sumi, boleh titip kue saya?"
+            },
+            {
+              "action": "The wife opens the tray to show the cakes, medium shot.",
+              "dialogue": "Ini kue mangkok, baru matang."
+            },
+            {
+              "action": "The warung owner tastes a cake, close-up.",
+              "dialogue": ""
+            },
+            {
+              "action": "The warung owner smiles and nods beside the glass case, medium shot.",
+              "dialogue": "Enak! Taruh sini aja, Laras."
+            }
+          ],
+          "audio": "morning street ambience, motorbikes passing, light warm acoustic music",
+          "customPrompt": "",
+          "status": "draft",
+          "fixLevel": 0,
+          "needsVO": [],
+          "attempts": [],
+          "clip": null,
+          "avoid": ""
+        },
+        {
+          "n": 3,
+          "title": "Laku Terjual",
+          "startFrame": "episodes/d79a0507/frames/Scene_3.png",
+          "singleFrame": "episodes/d79a0507/frames/Scene_3_foto1.png",
+          "setting": "Busy village warung counter with glass display case, bright late-morning daylight.",
+          "characters": [
+            "W",
+            "S",
+            "C"
+          ],
+          "shots": [
+            {
+              "action": "A customer buys cakes from the warung counter, medium two-shot.",
+              "dialogue": "Bu, kuenya lima ya."
+            },
+            {
+              "action": "The warung owner wraps cakes in paper, medium close-up.",
+              "dialogue": ""
+            },
+            {
+              "action": "Close-up of the empty glass display case.",
+              "dialogue": ""
+            },
+            {
+              "action": "The wife returns to the warung, looking hopeful, medium close-up.",
+              "dialogue": "Gimana, Bu? Ada yang beli?"
+            },
+            {
+              "action": "The warung owner hands folded money to the wife, close-up on hands and smile.",
+              "dialogue": "Habis semua! Ini uangnya."
+            }
+          ],
+          "audio": "lively warung chatter, soft cheerful music",
+          "customPrompt": "",
+          "status": "draft",
+          "fixLevel": 0,
+          "needsVO": [],
+          "attempts": [],
+          "clip": null,
+          "avoid": ""
+        },
+        {
+          "n": 4,
+          "title": "Susu untuk Nayla",
+          "startFrame": "episodes/d79a0507/frames/Scene_4.png",
+          "singleFrame": "episodes/d79a0507/frames/Scene_4_foto1.png",
+          "setting": "Small shop then simple wooden house interior, warm midday light.",
+          "characters": [
+            "W",
+            "D"
+          ],
+          "shots": [
+            {
+              "action": "The wife looks at the money in her hands, smiling with emotion, close-up.",
+              "dialogue": "Cukup buat beli susu Nayla."
+            },
+            {
+              "action": "The wife picks up a box of milk powder in the shop, medium shot.",
+              "dialogue": ""
+            },
+            {
+              "action": "The wife walks home carrying the milk box and a handbag, full shot.",
+              "dialogue": ""
+            },
+            {
+              "action": "The little daughter happily hugs the milk box, close-up.",
+              "dialogue": "Asyik! Susu baru, Ibu!"
+            },
+            {
+              "action": "The wife hides the leftover money in a tin on a shelf, medium shot.",
+              "dialogue": ""
+            }
+          ],
+          "audio": "home ambience, gentle touching piano",
+          "customPrompt": "",
+          "status": "draft",
+          "fixLevel": 0,
+          "needsVO": [],
+          "attempts": [],
+          "clip": null,
+          "avoid": "readable brand names on milk box"
+        },
+        {
+          "n": 5,
+          "title": "Dimas Curiga",
+          "startFrame": "episodes/d79a0507/frames/Scene_5.png",
+          "singleFrame": "episodes/d79a0507/frames/Scene_5_foto1.png",
+          "setting": "Simple wooden house living room, late afternoon warm light.",
+          "characters": [
+            "H",
+            "W"
+          ],
+          "shots": [
+            {
+              "action": "The husband comes home from work with a backpack, medium shot.",
+              "dialogue": ""
+            },
+            {
+              "action": "The husband notices the new milk box on the table, medium shot.",
+              "dialogue": ""
+            },
+            {
+              "action": "The husband frowns with suspicion, close-up.",
+              "dialogue": ""
+            },
+            {
+              "action": "The husband turns and questions sharply, medium close-up.",
+              "dialogue": "Susu ini beli pakai uang siapa?"
+            },
+            {
+              "action": "The wife looks nervous, avoiding his eyes, close-up.",
+              "dialogue": "Itu... ada rezeki sedikit, Mas."
+            }
+          ],
+          "audio": "quiet house ambience, tense low strings",
+          "customPrompt": "",
+          "status": "draft",
+          "fixLevel": 0,
+          "needsVO": [],
+          "attempts": [],
+          "clip": null,
+          "avoid": ""
+        },
+        {
+          "n": 6,
+          "title": "Uang Diambil",
+          "startFrame": "episodes/d79a0507/frames/Scene_6.png",
+          "singleFrame": "episodes/d79a0507/frames/Scene_6_foto1.png",
+          "setting": "Simple wooden house kitchen shelf area, dim evening light.",
+          "characters": [
+            "H",
+            "W"
+          ],
+          "shots": [
+            {
+              "action": "The husband spots the tin on the shelf, medium shot.",
+              "dialogue": ""
+            },
+            {
+              "action": "The husband opens the tin and finds the money, close-up on hands.",
+              "dialogue": ""
+            },
+            {
+              "action": "Close-up of rupiah notes in the husband's hand.",
+              "dialogue": ""
+            },
+            {
+              "action": "The wife stares in shock, close-up.",
+              "dialogue": "Mas, itu uang buat Nayla!"
+            },
+            {
+              "action": "The husband pockets the money coldly, medium shot.",
+              "dialogue": "Ini uang dapur, punyaku juga."
+            }
+          ],
+          "audio": "silent tense room, dramatic sad strings",
+          "customPrompt": "",
+          "status": "draft",
+          "fixLevel": 0,
+          "needsVO": [],
+          "attempts": [],
+          "clip": null,
+          "avoid": "speech bubbles, on-screen text"
+        }
+      ],
+      "output": null,
+      "createdAt": 1795494474789,
+      "pipeline": {
+        "stage": "attention",
+        "at": 1795496317446,
+        "error": "Scene 1, 2, 3, 4, 5, 6 belum punya video (cek manual / unggah sendiri), lalu klik Lanjutkan."
+      }
+    },
+    {
+      "id": "6cccf9ec",
+      "seriesId": "d3e76685",
+      "title": "Pelakor Berkedok Sahabat – Episode 1: Sahabat Datang",
+      "storyboard": "episodes/6cccf9ec/storyboard.png",
+      "scenes": [
+        {
+          "n": 1,
+          "title": "Ketukan Malam",
+          "startFrame": "episodes/6cccf9ec/frames/Scene_1.png",
+          "singleFrame": "episodes/6cccf9ec/frames/Scene_1_foto1.png",
+          "setting": "Front porch and doorway of a cozy Indonesian family house on a rainy night, warm porch light against dark blue rain.",
+          "characters": [
+            "W",
+            "F"
+          ],
+          "shots": [
+            {
+              "action": "Wide establishing shot of the house exterior in heavy night rain, porch lamps glowing.",
+              "dialogue": ""
+            },
+            {
+              "action": "Medium shot of the wife opening the front door, surprised.",
+              "dialogue": "Mega? Malam-malam begini?"
+            },
+            {
+              "action": "Medium shot of the best friend at the door with a suitcase, crying.",
+              "dialogue": "Rin, aku nggak punya siapa-siapa lagi."
+            },
+            {
+              "action": "Medium shot of the wife and the best friend hugging tightly in the doorway.",
+              "dialogue": ""
+            },
+            {
+              "action": "Medium close-up of the wife gesturing inside, inviting her friend in.",
+              "dialogue": "Ayo masuk dulu, di luar hujan."
+            }
+          ],
+          "audio": "heavy rain and distant thunder, soft melancholic piano",
+          "customPrompt": "",
+          "status": "done",
+          "fixLevel": 0,
+          "needsVO": [],
+          "attempts": [
+            {
+              "at": "2026-11-24T06:42:41.373Z",
+              "level": 0,
+              "levelName": "Prompt asli",
+              "frame": "row",
+              "prompt": "Model: Google Omni Flow 1.2. Aspect ratio: 9:16 vertical. Duration: 10 seconds. Use the start frame provided. Two reference images are attached: image 1 is the start frame (storyboard of this scene), image 2 is the CHARACTER SHEET. Copy every character's face, age, hair or hijab and outfit exactly from the character sheet, in every shot. Never show the character sheet itself in the video.\n\nSTORYBOARD INSTRUCTION: The start frame is a storyboard strip with a red \"SCENE 1\" label box on the left and 5 numbered photos with captions, read from left to right. Treat it only as the shot plan. Immediately cut to shot 1 as a single full-frame 9:16 image. Recreate each of the 5 photos in order as one 2-second shot, copying its framing, camera angle, people, faces, outfits and lighting. No extra wide shots and no extra people. Never show the storyboard layout, label box, captions, numbers, borders or split screens after the first frame. Never write any names or words on screen.\n\nSETTING: Front porch and doorway of a cozy Indonesian family house on a rainy night, warm porch light against dark blue rain. Hard cuts every 2 seconds.\n\nCHARACTERS (identical in every shot):\n- The wife: Indonesian woman, 32, sage green hijab, cream long-sleeve blouse with light embroidery\n- The wife's best friend: Indonesian woman, 32, long wavy dark brown hair, no hijab, red button-up blouse, gold hoop earrings\n\nSHOTS (follow the photos 1–5):\n[00:00–00:02] Shot 1: Wide establishing shot of the house exterior in heavy night rain, porch lamps glowing.. No dialogue.\n[00:02–00:04] Shot 2: Medium shot of the wife opening the front door, surprised.: \"Mega? Malam-malam begini?\"\n[00:04–00:06] Shot 3: Medium shot of the best friend at the door with a suitcase, crying.: \"Rin, aku nggak punya siapa-siapa lagi.\"\n[00:06–00:08] Shot 4: Medium shot of the wife and the best friend hugging tightly in the doorway.. No dialogue.\n[00:08–00:10] Shot 5: Medium close-up of the wife gesturing inside, inviting her friend in.: \"Ayo masuk dulu, di luar hujan.\"\n\nAUDIO: heavy rain and distant thunder, soft melancholic piano. Natural Indonesian voices, lip-synced.\n\nAvoid: umbrella, daylight, extra people, text on screen, captions, subtitles, storyboard layout, split screen, cartoon, anime, distorted faces, deformed hands, extra fingers, faces changing between shots, changing outfits, extra people, brand logos, watermark, blurry, morphing, flickering, English speech.",
+              "result": "ok"
+            }
+          ],
+          "clip": "episodes/6cccf9ec/clips/scene_1.mp4",
+          "avoid": "umbrella, daylight, extra people",
+          "lastError": "locator.click: Timeout 30000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('flow-grid-tile-container:has(flow-video-tile)').first().locator('button[aria-label=\\'Opsi lainnya\\'], button[aria-label=\\'More options\\']').first()\u001b[22m\n",
+          "flowName": "Scene 1 – Pelakor Berkedok Sahabat Eps 1"
+        },
+        {
+          "n": 2,
+          "title": "Cerita Mega",
+          "startFrame": "episodes/6cccf9ec/frames/Scene_2.png",
+          "singleFrame": "episodes/6cccf9ec/frames/Scene_2_foto1.png",
+          "setting": "Warm living room at night, soft lamp light, tea cups on a small table.",
+          "characters": [
+            "W",
+            "F",
+            "H"
+          ],
+          "shots": [
+            {
+              "action": "Over-the-shoulder shot of the best friend holding a teacup facing the wife in the living room.",
+              "dialogue": ""
+            },
+            {
+              "action": "Close-up of the best friend telling her story, eyes teary.",
+              "dialogue": "Aku sudah resmi cerai, Rin."
+            },
+            {
+              "action": "Close-up of the wife listening with pity.",
+              "dialogue": "Ya Allah, sabar ya, Meg."
+            },
+            {
+              "action": "Medium shot of the husband entering the living room.",
+              "dialogue": ""
+            },
+            {
+              "action": "Close-up of the husband looking confused.",
+              "dialogue": "Lho, ada tamu malam-malam?"
+            }
+          ],
+          "audio": "quiet indoor night ambience, light rain outside, sad soft strings",
+          "customPrompt": "",
+          "status": "done",
+          "fixLevel": 0,
+          "needsVO": [],
+          "attempts": [
+            {
+              "at": "2026-11-24T06:52:36.240Z",
+              "level": 0,
+              "levelName": "Prompt asli",
+              "frame": "row",
+              "prompt": "Model: Google Omni Flow 1.2. Generate with generate_video_with_references. Aspect ratio: 9:16 vertical. Duration: 10 seconds. Use BOTH attached images as reference images (not as a literal first frame): image 1 is the storyboard of this scene (shot plan), image 2 is the CHARACTER SHEET. Copy every character's face, age, hair or hijab and outfit exactly from the character sheet, in every shot. Never show the character sheet or its name labels in the video.\n\nSTORYBOARD INSTRUCTION: Image 1 is a storyboard strip with a red \"SCENE 2\" label box on the left and 5 numbered photos with captions, read from left to right. Treat it only as the shot plan. Immediately cut to shot 1 as a single full-frame 9:16 image. Recreate each of the 5 photos in order as one 2-second shot, copying its framing, camera angle, people, faces, outfits and lighting. No extra wide shots and no extra people. Never show the storyboard layout, label box, captions, numbers, borders or split screens at any time. Never write any names or words on screen.\n\nSETTING: Warm living room at night, soft lamp light, tea cups on a small table. Hard cuts every 2 seconds.\n\nCHARACTERS (identical in every shot):\n- The wife: Indonesian woman, 32, sage green hijab, cream long-sleeve blouse with light embroidery\n- The wife's best friend: Indonesian woman, 32, long wavy dark brown hair, no hijab, red button-up blouse, gold hoop earrings\n- The husband: Indonesian man, 35, short neat black hair, navy blue polo shirt\n\nSHOTS (follow the photos 1–5):\n[00:00–00:02] Shot 1: Over-the-shoulder shot of the best friend holding a teacup facing the wife in the living room.. No dialogue.\n[00:02–00:04] Shot 2: Close-up of the best friend telling her story, eyes teary.: \"Aku sudah resmi cerai, Rin.\"\n[00:04–00:06] Shot 3: Close-up of the wife listening with pity.: \"Ya Allah, sabar ya, Meg.\"\n[00:06–00:08] Shot 4: Medium shot of the husband entering the living room.. No dialogue.\n[00:08–00:10] Shot 5: Close-up of the husband looking confused.: \"Lho, ada tamu malam-malam?\"\n\nAUDIO: quiet indoor night ambience, light rain outside, sad soft strings. Natural Indonesian voices, lip-synced.\n\nAvoid: bright daylight, TV on, text on screen, captions, subtitles, storyboard layout, split screen, cartoon, anime, distorted faces, deformed hands, extra fingers, faces changing between shots, changing outfits, extra people, brand logos, watermark, blurry, morphing, flickering, English speech.",
+              "result": "ok"
+            }
+          ],
+          "clip": "episodes/6cccf9ec/clips/scene_2.mp4",
+          "avoid": "bright daylight, TV on",
+          "lastError": null,
+          "flowName": "Scene 2 – Pelakor Berkedok Sahabat Eps 1"
+        },
+        {
+          "n": 3,
+          "title": "Boleh Numpang?",
+          "startFrame": "episodes/6cccf9ec/frames/Scene_3.png",
+          "singleFrame": "episodes/6cccf9ec/frames/Scene_3_foto1.png",
+          "setting": "Hallway corner of the house at night, warm dim lamp light.",
+          "characters": [
+            "W",
+            "H"
+          ],
+          "shots": [
+            {
+              "action": "Medium shot of the wife pulling the husband's arm aside to talk privately.",
+              "dialogue": "Mas, sini sebentar."
+            },
+            {
+              "action": "Close-up of the wife pleading with hands pressed together.",
+              "dialogue": "Boleh ya Mega numpang sementara?"
+            },
+            {
+              "action": "Close-up of the husband rubbing his neck, hesitant.",
+              "dialogue": "Hmm, aku nggak enak, Dek."
+            },
+            {
+              "action": "Close-up of the husband looking down, giving in.",
+              "dialogue": "Ya sudah, terserah kamu."
+            },
+            {
+              "action": "Close-up of the wife smiling with relief.",
+              "dialogue": ""
+            }
+          ],
+          "audio": "quiet hallway night ambience, gentle tense piano resolving softly",
+          "customPrompt": "",
+          "status": "done",
+          "fixLevel": 0,
+          "needsVO": [],
+          "attempts": [
+            {
+              "at": "2026-11-24T06:59:25.249Z",
+              "level": 0,
+              "levelName": "Prompt asli",
+              "frame": "row",
+              "prompt": "Model: Google Omni Flow 1.2. Generate with generate_video_with_references. Aspect ratio: 9:16 vertical. Duration: 10 seconds. Use BOTH attached images as reference images (not as a literal first frame): image 1 is the storyboard of this scene (shot plan), image 2 is the CHARACTER SHEET. Copy every character's face, age, hair or hijab and outfit exactly from the character sheet, in every shot. Never show the character sheet or its name labels in the video.\n\nSTORYBOARD INSTRUCTION: Image 1 is a storyboard strip with a red \"SCENE 3\" label box on the left and 5 numbered photos with captions, read from left to right. Treat it only as the shot plan. Immediately cut to shot 1 as a single full-frame 9:16 image. Recreate each of the 5 photos in order as one 2-second shot, copying its framing, camera angle, people, faces, outfits and lighting. No extra wide shots and no extra people. Never show the storyboard layout, label box, captions, numbers, borders or split screens at any time. Never write any names or words on screen.\n\nSETTING: Hallway corner of the house at night, warm dim lamp light. Hard cuts every 2 seconds.\n\nCHARACTERS (identical in every shot):\n- The wife: Indonesian woman, 32, sage green hijab, cream long-sleeve blouse with light embroidery\n- The husband: Indonesian man, 35, short neat black hair, navy blue polo shirt\n\nSHOTS (follow the photos 1–5):\n[00:00–00:02] Shot 1: Medium shot of the wife pulling the husband's arm aside to talk privately.: \"Mas, sini sebentar.\"\n[00:02–00:04] Shot 2: Close-up of the wife pleading with hands pressed together.: \"Boleh ya Mega numpang sementara?\"\n[00:04–00:06] Shot 3: Close-up of the husband rubbing his neck, hesitant.: \"Hmm, aku nggak enak, Dek.\"\n[00:06–00:08] Shot 4: Close-up of the husband looking down, giving in.: \"Ya sudah, terserah kamu.\"\n[00:08–00:10] Shot 5: Close-up of the wife smiling with relief.. No dialogue.\n\nAUDIO: quiet hallway night ambience, gentle tense piano resolving softly. Natural Indonesian voices, lip-synced.\n\nAvoid: shouting, angry faces, text on screen, captions, subtitles, storyboard layout, split screen, cartoon, anime, distorted faces, deformed hands, extra fingers, faces changing between shots, changing outfits, extra people, brand logos, watermark, blurry, morphing, flickering, English speech.",
+              "result": "ok"
+            }
+          ],
+          "clip": "episodes/6cccf9ec/clips/scene_3.mp4",
+          "avoid": "shouting, angry faces",
+          "lastError": null,
+          "flowName": "Scene 3 – Pelakor Berkedok Sahabat Eps 1"
+        },
+        {
+          "n": 4,
+          "title": "Kamar Tamu",
+          "startFrame": "episodes/6cccf9ec/frames/Scene_4.png",
+          "singleFrame": "episodes/6cccf9ec/frames/Scene_4_foto1.png",
+          "setting": "Cozy guest bedroom at night, warm bedside lamp light.",
+          "characters": [
+            "W",
+            "F",
+            "D"
+          ],
+          "shots": [
+            {
+              "action": "Wide shot of the wife arranging pillows on the guest bed.",
+              "dialogue": ""
+            },
+            {
+              "action": "Close-up of the little daughter peeking from behind the door.",
+              "dialogue": ""
+            },
+            {
+              "action": "Medium shot of the best friend hugging the little daughter warmly.",
+              "dialogue": "Halo Kiara, makin cantik aja."
+            },
+            {
+              "action": "Medium shot of the best friend holding the wife's hands gratefully.",
+              "dialogue": "Makasih banyak ya, Rin."
+            },
+            {
+              "action": "Close-up of the wife smiling sincerely.",
+              "dialogue": "Anggap rumah sendiri, Meg."
+            }
+          ],
+          "audio": "soft night room ambience, warm gentle piano",
+          "customPrompt": "",
+          "status": "done",
+          "fixLevel": 2,
+          "needsVO": [],
+          "attempts": [
+            {
+              "at": "2026-11-24T07:06:05.042Z",
+              "level": 0,
+              "levelName": "Prompt asli",
+              "frame": "row",
+              "prompt": "Model: Google Omni Flow 1.2. Generate with generate_video_with_references. Aspect ratio: 9:16 vertical. Duration: 10 seconds. Use BOTH attached images as reference images (not as a literal first frame): image 1 is the storyboard of this scene (shot plan), image 2 is the CHARACTER SHEET. Copy every character's face, age, hair or hijab and outfit exactly from the character sheet, in every shot. Never show the character sheet or its name labels in the video.\n\nSTORYBOARD INSTRUCTION: Image 1 is a storyboard strip with a red \"SCENE 4\" label box on the left and 5 numbered photos with captions, read from left to right. Treat it only as the shot plan. Immediately cut to shot 1 as a single full-frame 9:16 image. Recreate each of the 5 photos in order as one 2-second shot, copying its framing, camera angle, people, faces, outfits and lighting. No extra wide shots and no extra people. Never show the storyboard layout, label box, captions, numbers, borders or split screens at any time. Never write any names or words on screen.\n\nSETTING: Cozy guest bedroom at night, warm bedside lamp light. Hard cuts every 2 seconds.\n\nCHARACTERS (identical in every shot):\n- The wife: Indonesian woman, 32, sage green hijab, cream long-sleeve blouse with light embroidery\n- The wife's best friend: Indonesian woman, 32, long wavy dark brown hair, no hijab, red button-up blouse, gold hoop earrings\n- The little daughter: Indonesian girl, 7, black shoulder-length bob hair, light blue t-shirt\n\nSHOTS (follow the photos 1–5):\n[00:00–00:02] Shot 1: Wide shot of the wife arranging pillows on the guest bed.. No dialogue.\n[00:02–00:04] Shot 2: Close-up of the little daughter peeking from behind the door.. No dialogue.\n[00:04–00:06] Shot 3: Medium shot of the best friend hugging the little daughter warmly.: \"Halo Kiara, makin cantik aja.\"\n[00:06–00:08] Shot 4: Medium shot of the best friend holding the wife's hands gratefully.: \"Makasih banyak ya, Rin.\"\n[00:08–00:10] Shot 5: Close-up of the wife smiling sincerely.: \"Anggap rumah sendiri, Meg.\"\n\nAUDIO: soft night room ambience, warm gentle piano. Natural Indonesian voices, lip-synced.\n\nAvoid: messy room, extra children, text on screen, captions, subtitles, storyboard layout, split screen, cartoon, anime, distorted faces, deformed hands, extra fingers, faces changing between shots, changing outfits, extra people, brand logos, watermark, blurry, morphing, flickering, English speech.",
+              "result": "policy",
+              "error": "Flow menampilkan: \"melanggar kebijakan\""
+            },
+            {
+              "at": "2026-11-24T07:12:23.208Z",
+              "level": 1,
+              "levelName": "Haluskan kata",
+              "frame": "row",
+              "prompt": "Model: Google Omni Flow 1.2. Generate with generate_video_with_references. Aspect ratio: 9:16 vertical. Duration: 10 seconds. Use BOTH attached images as reference images (not as a literal first frame): image 1 is the storyboard of this scene (shot plan), image 2 is the CHARACTER SHEET. Copy every character's face, age, hair or hijab and outfit exactly from the character sheet, in every shot. Never show the character sheet or its name labels in the video.\n\nSTORYBOARD INSTRUCTION: Image 1 is a storyboard strip with a red \"SCENE 4\" label box on the left and 5 numbered photos with captions, read from left to right. Treat it only as the shot plan. Immediately cut to shot 1 as a single full-frame 9:16 image. Recreate each of the 5 photos in order as one 2-second shot, copying its framing, camera angle, people, faces, outfits and lighting. No extra wide shots and no extra people. Never show the storyboard layout, label box, captions, numbers, borders or split screens at any time. Never write any names or words on screen.\n\nSETTING: Cozy guest room at night, warm bedside lamp light. Hard cuts every 2 seconds.\n\nCHARACTERS (identical in every shot):\n- The wife: Indonesian woman, 32, sage green hijab, cream long-sleeve blouse with light embroidery\n- The wife's best friend: Indonesian woman, 32, long wavy dark brown hair, no hijab, red button-up blouse, gold hoop earrings\n- The little daughter: Indonesian girl, 7, black shoulder-length bob hair, light blue t-shirt\n\nSHOTS (follow the photos 1–5):\n[00:00–00:02] Shot 1: Wide shot of the wife arranging pillows on the guest bed.. No dialogue.\n[00:02–00:04] Shot 2: Close-up of the little daughter peeking from behind the door.. No dialogue.\n[00:04–00:06] Shot 3: Medium shot of the best friend hugging the little daughter warmly.: \"Halo Kiara, makin cantik aja.\"\n[00:06–00:08] Shot 4: Medium shot of the best friend holding the wife's hands gratefully.: \"Makasih banyak ya, Rin.\"\n[00:08–00:10] Shot 5: Close-up of the wife smiling sincerely.: \"Anggap rumah sendiri, Meg.\"\n\nAUDIO: soft night room ambience, warm gentle piano. Natural Indonesian voices, lip-synced.\n\nAvoid: messy room, extra children, text on screen, captions, subtitles, storyboard layout, split screen, cartoon, anime, distorted faces, deformed hands, extra fingers, faces changing between shots, changing outfits, extra people, brand logos, watermark, blurry, morphing, flickering, English speech.",
+              "result": "policy",
+              "error": "Flow menampilkan: \"melanggar kebijakan\""
+            },
+            {
+              "at": "2026-11-24T07:18:00.728Z",
+              "level": 2,
+              "levelName": "Foto tunggal + prompt ringkas",
+              "frame": "single",
+              "prompt": "Model: Google Omni Flow 1.2. Generate with generate_video_with_references. Aspect ratio: 9:16 vertical. Duration: 10 seconds. Use BOTH attached images as reference images (not as a literal first frame): image 1 is the storyboard of this scene (shot plan), image 2 is the CHARACTER SHEET. Copy every character's face, age, hair or hijab and outfit exactly from the character sheet, in every shot. Never show the character sheet or its name labels in the video.\n\nCozy guest room at night, warm bedside lamp light. Cinematic photorealistic Indonesian family drama. The same people from the character sheet, same faces and outfits in every shot. Hard cuts every 2 seconds. Never write any names or words on screen.\n\nCHARACTERS (identical in every shot):\n- The wife: Indonesian woman, 32, sage green hijab, cream long-sleeve blouse with light embroidery\n- The wife's best friend: Indonesian woman, 32, long wavy dark brown hair, no hijab, red button-up blouse, gold hoop earrings\n- The little daughter: Indonesian girl, 7, black shoulder-length bob hair, light blue t-shirt\n\nSHOTS:\n[00:00–00:02] Shot 1: Wide shot of the wife arranging pillows on the guest bed.. No dialogue.\n[00:02–00:04] Shot 2: Close-up of the little daughter peeking from behind the door.. No dialogue.\n[00:04–00:06] Shot 3: Medium shot of the best friend hugging the little daughter warmly.: \"Halo Kiara, makin cantik aja.\"\n[00:06–00:08] Shot 4: Medium shot of the best friend holding the wife's hands gratefully.: \"Makasih banyak ya, Rin.\"\n[00:08–00:10] Shot 5: Close-up of the wife smiling sincerely.: \"Anggap rumah sendiri, Meg.\"\n\nAUDIO: soft night room ambience, warm gentle piano. Natural Indonesian voices, lip-synced.\n\nAvoid: text on screen, subtitles, cartoon style, distorted faces, extra fingers, extra people, changing outfits.",
+              "result": "ok"
+            }
+          ],
+          "clip": "episodes/6cccf9ec/clips/scene_4.mp4",
+          "avoid": "messy room, extra children",
+          "lastError": "locator.click: Timeout 30000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('flow-grid-tile-container:has(flow-video-tile)').first().locator('button[aria-label=\\'Opsi lainnya\\'], button[aria-label=\\'More options\\']').first()\u001b[22m\n",
+          "flowName": "Scene 4 – Pelakor Berkedok Sahabat Eps 1"
+        },
+        {
+          "n": 5,
+          "title": "Pagi Pertama",
+          "startFrame": "episodes/6cccf9ec/frames/Scene_5.png",
+          "singleFrame": "episodes/6cccf9ec/frames/Scene_5_foto1.png",
+          "setting": "Bright home kitchen in the morning, soft sunlight through the window.",
+          "characters": [
+            "W",
+            "F"
+          ],
+          "shots": [
+            {
+              "action": "Wide shot of the wife walking into the kitchen in the morning.",
+              "dialogue": ""
+            },
+            {
+              "action": "Close-up of the wife looking startled.",
+              "dialogue": "Lho, Meg? Pagi banget."
+            },
+            {
+              "action": "Medium shot of the best friend cooking at the stove wearing the wife's green floral house dress.",
+              "dialogue": ""
+            },
+            {
+              "action": "Close-up of the wife staring at her own house dress, uneasy.",
+              "dialogue": "Itu... daster aku, kan?"
+            },
+            {
+              "action": "Close-up of the best friend smiling sweetly in the kitchen.",
+              "dialogue": "Pinjam ya, bajuku basah semua."
+            }
+          ],
+          "audio": "morning kitchen ambience, sizzling pan, birds outside, light suspicious music",
+          "customPrompt": "",
+          "status": "done",
+          "fixLevel": 0,
+          "needsVO": [],
+          "attempts": [
+            {
+              "at": "2026-11-24T07:23:09.860Z",
+              "level": 0,
+              "levelName": "Prompt asli",
+              "frame": "row",
+              "prompt": "Model: Google Omni Flow 1.2. Generate with generate_video_with_references. Aspect ratio: 9:16 vertical. Duration: 10 seconds. Use BOTH attached images as reference images (not as a literal first frame): image 1 is the storyboard of this scene (shot plan), image 2 is the CHARACTER SHEET. Copy every character's face, age, hair or hijab and outfit exactly from the character sheet, in every shot. Never show the character sheet or its name labels in the video.\n\nSTORYBOARD INSTRUCTION: Image 1 is a storyboard strip with a red \"SCENE 5\" label box on the left and 5 numbered photos with captions, read from left to right. Treat it only as the shot plan. Immediately cut to shot 1 as a single full-frame 9:16 image. Recreate each of the 5 photos in order as one 2-second shot, copying its framing, camera angle, people, faces, outfits and lighting. No extra wide shots and no extra people. Never show the storyboard layout, label box, captions, numbers, borders or split screens at any time. Never write any names or words on screen.\n\nSETTING: Bright home kitchen in the morning, soft sunlight through the window. Hard cuts every 2 seconds.\n\nCHARACTERS (identical in every shot):\n- The wife: Indonesian woman, 32, sage green hijab, cream long-sleeve blouse with light embroidery\n- The wife's best friend: Indonesian woman, 32, long wavy dark brown hair, no hijab, red button-up blouse, gold hoop earrings\n\nSHOTS (follow the photos 1–5):\n[00:00–00:02] Shot 1: Wide shot of the wife walking into the kitchen in the morning.. No dialogue.\n[00:02–00:04] Shot 2: Close-up of the wife looking startled.: \"Lho, Meg? Pagi banget.\"\n[00:04–00:06] Shot 3: Medium shot of the best friend cooking at the stove wearing the wife's green floral house dress.. No dialogue.\n[00:06–00:08] Shot 4: Close-up of the wife staring at her own house dress, uneasy.: \"Itu... daster aku, kan?\"\n[00:08–00:10] Shot 5: Close-up of the best friend smiling sweetly in the kitchen.: \"Pinjam ya, bajuku basah semua.\"\n\nAUDIO: morning kitchen ambience, sizzling pan, birds outside, light suspicious music. Natural Indonesian voices, lip-synced.\n\nAvoid: night lighting, extra people, text on screen, captions, subtitles, storyboard layout, split screen, cartoon, anime, distorted faces, deformed hands, extra fingers, faces changing between shots, changing outfits, extra people, brand logos, watermark, blurry, morphing, flickering, English speech.",
+              "result": "ok"
+            }
+          ],
+          "clip": "episodes/6cccf9ec/clips/scene_5.mp4",
+          "avoid": "night lighting, extra people",
+          "lastError": "locator.click: Timeout 30000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('flow-grid-tile-container:has(flow-video-tile)').first().locator('button[aria-label=\\'Opsi lainnya\\'], button[aria-label=\\'More options\\']').first()\u001b[22m\n",
+          "flowName": "Scene 5 – Pelakor Berkedok Sahabat Eps 1"
+        },
+        {
+          "n": 6,
+          "title": "Kopi untuk Arya",
+          "startFrame": "episodes/6cccf9ec/frames/Scene_6.png",
+          "singleFrame": "episodes/6cccf9ec/frames/Scene_6_foto1.png",
+          "setting": "Dining area next to the kitchen in the morning, warm soft daylight.",
+          "characters": [
+            "H",
+            "F",
+            "W"
+          ],
+          "shots": [
+            {
+              "action": "Medium shot of the husband sitting at the dining table.",
+              "dialogue": ""
+            },
+            {
+              "action": "Medium shot of the best friend serving a cup of coffee to the husband.",
+              "dialogue": "Kopinya, Mas Arya."
+            },
+            {
+              "action": "Close-up of the husband smiling as he takes the coffee.",
+              "dialogue": "Wah, makasih ya, Meg."
+            },
+            {
+              "action": "Medium close-up of the wife standing in the doorway, silent and hurt.",
+              "dialogue": ""
+            },
+            {
+              "action": "Close-up of the best friend smiling flirtatiously.",
+              "dialogue": "Kopinya pas, kan, Mas?"
+            }
+          ],
+          "audio": "quiet morning dining ambience, cup clinks, tense ominous strings",
+          "customPrompt": "",
+          "status": "done",
+          "fixLevel": 0,
+          "needsVO": [],
+          "attempts": [
+            {
+              "at": "2026-11-24T07:29:29.781Z",
+              "level": 0,
+              "levelName": "Prompt asli",
+              "frame": "row",
+              "prompt": "Model: Google Omni Flow 1.2. Generate with generate_video_with_references. Aspect ratio: 9:16 vertical. Duration: 10 seconds. Use BOTH attached images as reference images (not as a literal first frame): image 1 is the storyboard of this scene (shot plan), image 2 is the CHARACTER SHEET. Copy every character's face, age, hair or hijab and outfit exactly from the character sheet, in every shot. Never show the character sheet or its name labels in the video.\n\nSTORYBOARD INSTRUCTION: Image 1 is a storyboard strip with a red \"SCENE 6\" label box on the left and 5 numbered photos with captions, read from left to right. Treat it only as the shot plan. Immediately cut to shot 1 as a single full-frame 9:16 image. Recreate each of the 5 photos in order as one 2-second shot, copying its framing, camera angle, people, faces, outfits and lighting. No extra wide shots and no extra people. Do not show any speech bubble; speak that line as dialogue instead. Never show the storyboard layout, label box, captions, numbers, borders or split screens at any time. Never write any names or words on screen.\n\nSETTING: Dining area next to the kitchen in the morning, warm soft daylight. Hard cuts every 2 seconds.\n\nCHARACTERS (identical in every shot):\n- The wife: Indonesian woman, 32, sage green hijab, cream long-sleeve blouse with light embroidery\n- The wife's best friend: Indonesian woman, 32, long wavy dark brown hair, no hijab, red button-up blouse, gold hoop earrings\n- The husband: Indonesian man, 35, short neat black hair, navy blue polo shirt\n\nSHOTS (follow the photos 1–5):\n[00:00–00:02] Shot 1: Medium shot of the husband sitting at the dining table.. No dialogue.\n[00:02–00:04] Shot 2: Medium shot of the best friend serving a cup of coffee to the husband.: \"Kopinya, Mas Arya.\"\n[00:04–00:06] Shot 3: Close-up of the husband smiling as he takes the coffee.: \"Wah, makasih ya, Meg.\"\n[00:06–00:08] Shot 4: Medium close-up of the wife standing in the doorway, silent and hurt.. No dialogue.\n[00:08–00:10] Shot 5: Close-up of the best friend smiling flirtatiously.: \"Kopinya pas, kan, Mas?\"\n\nAUDIO: quiet morning dining ambience, cup clinks, tense ominous strings. Natural Indonesian voices, lip-synced.\n\nAvoid: text bubbles, extra people, text on screen, captions, subtitles, storyboard layout, split screen, cartoon, anime, distorted faces, deformed hands, extra fingers, faces changing between shots, changing outfits, extra people, brand logos, watermark, blurry, morphing, flickering, English speech.",
+              "result": "ok"
+            }
+          ],
+          "clip": "episodes/6cccf9ec/clips/scene_6.mp4",
+          "avoid": "text bubbles, extra people",
+          "lastError": null,
+          "flowName": "Scene 6 – Pelakor Berkedok Sahabat Eps 1"
+        }
+      ],
+      "output": {
+        "file": "episodes/6cccf9ec/Pelakor_Berkedok_Sahabat_Episode_1_Sahabat_Datang.mp4",
+        "total": 60,
+        "segs": [
+          {
+            "scene": 1,
+            "trimStart": 0.042,
+            "length": 9.99
+          },
+          {
+            "scene": 2,
+            "trimStart": 0.042,
+            "length": 9.99
+          },
+          {
+            "scene": 3,
+            "trimStart": 0.042,
+            "length": 9.99
+          },
+          {
+            "scene": 4,
+            "trimStart": 0.042,
+            "length": 9.99
+          },
+          {
+            "scene": 5,
+            "trimStart": 0.042,
+            "length": 9.99
+          },
+          {
+            "scene": 6,
+            "trimStart": 0.042,
+            "length": 9.99
+          }
+        ],
+        "at": 1795506884913
+      },
+      "createdAt": 1795502466313,
+      "pipeline": {
+        "stage": "done",
+        "at": 1795506884914,
+        "error": null
+      },
+      "flowProjectUrl": "https://flow.google.com/project/4c42757e-198a-4a70-8da3-65915d66686e",
+      "flowProjectStatus": "ok"
+    },
+    {
+      "id": "ffd28475",
+      "seriesId": "d3e76685",
+      "title": "Episode 2",
+      "storyboard": null,
+      "scenes": [
+        {
+          "n": 1,
+          "title": "Scene 1",
+          "startFrame": null,
+          "singleFrame": null,
+          "setting": "",
+          "characters": [],
+          "shots": [
+            {
+              "action": "",
+              "dialogue": ""
+            },
+            {
+              "action": "",
+              "dialogue": ""
+            },
+            {
+              "action": "",
+              "dialogue": ""
+            },
+            {
+              "action": "",
+              "dialogue": ""
+            },
+            {
+              "action": "",
+              "dialogue": ""
+            }
+          ],
+          "audio": "",
+          "customPrompt": "",
+          "status": "draft",
+          "fixLevel": 0,
+          "needsVO": [],
+          "attempts": [],
+          "clip": null
+        },
+        {
+          "n": 2,
+          "title": "Scene 2",
+          "startFrame": null,
+          "singleFrame": null,
+          "setting": "",
+          "characters": [],
+          "shots": [
+            {
+              "action": "",
+              "dialogue": ""
+            },
+            {
+              "action": "",
+              "dialogue": ""
+            },
+            {
+              "action": "",
+              "dialogue": ""
+            },
+            {
+              "action": "",
+              "dialogue": ""
+            },
+            {
+              "action": "",
+              "dialogue": ""
+            }
+          ],
+          "audio": "",
+          "customPrompt": "",
+          "status": "draft",
+          "fixLevel": 0,
+          "needsVO": [],
+          "attempts": [],
+          "clip": null
+        },
+        {
+          "n": 3,
+          "title": "Scene 3",
+          "startFrame": null,
+          "singleFrame": null,
+          "setting": "",
+          "characters": [],
+          "shots": [
+            {
+              "action": "",
+              "dialogue": ""
+            },
+            {
+              "action": "",
+              "dialogue": ""
+            },
+            {
+              "action": "",
+              "dialogue": ""
+            },
+            {
+              "action": "",
+              "dialogue": ""
+            },
+            {
+              "action": "",
+              "dialogue": ""
+            }
+          ],
+          "audio": "",
+          "customPrompt": "",
+          "status": "draft",
+          "fixLevel": 0,
+          "needsVO": [],
+          "attempts": [],
+          "clip": null
+        },
+        {
+          "n": 4,
+          "title": "Scene 4",
+          "startFrame": null,
+          "singleFrame": null,
+          "setting": "",
+          "characters": [],
+          "shots": [
+            {
+              "action": "",
+              "dialogue": ""
+            },
+            {
+              "action": "",
+              "dialogue": ""
+            },
+            {
+              "action": "",
+              "dialogue": ""
+            },
+            {
+              "action": "",
+              "dialogue": ""
+            },
+            {
+              "action": "",
+              "dialogue": ""
+            }
+          ],
+          "audio": "",
+          "customPrompt": "",
+          "status": "draft",
+          "fixLevel": 0,
+          "needsVO": [],
+          "attempts": [],
+          "clip": null
+        },
+        {
+          "n": 5,
+          "title": "Scene 5",
+          "startFrame": null,
+          "singleFrame": null,
+          "setting": "",
+          "characters": [],
+          "shots": [
+            {
+              "action": "",
+              "dialogue": ""
+            },
+            {
+              "action": "",
+              "dialogue": ""
+            },
+            {
+              "action": "",
+              "dialogue": ""
+            },
+            {
+              "action": "",
+              "dialogue": ""
+            },
+            {
+              "action": "",
+              "dialogue": ""
+            }
+          ],
+          "audio": "",
+          "customPrompt": "",
+          "status": "draft",
+          "fixLevel": 0,
+          "needsVO": [],
+          "attempts": [],
+          "clip": null
+        },
+        {
+          "n": 6,
+          "title": "Scene 6",
+          "startFrame": null,
+          "singleFrame": null,
+          "setting": "",
+          "characters": [],
+          "shots": [
+            {
+              "action": "",
+              "dialogue": ""
+            },
+            {
+              "action": "",
+              "dialogue": ""
+            },
+            {
+              "action": "",
+              "dialogue": ""
+            },
+            {
+              "action": "",
+              "dialogue": ""
+            },
+            {
+              "action": "",
+              "dialogue": ""
+            }
+          ],
+          "audio": "",
+          "customPrompt": "",
+          "status": "draft",
+          "fixLevel": 0,
+          "needsVO": [],
+          "attempts": [],
+          "clip": null
+        }
+      ],
+      "output": null,
+      "createdAt": 1795510730049
+    }
+  ],
+  "accounts": [
+    {
+      "id": "a1",
+      "name": "Akun 1",
+      "profileDir": "./browser-profile"
+    }
+  ],
+  "activeAccount": "a1"
+}

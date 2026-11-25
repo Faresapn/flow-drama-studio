@@ -1,0 +1,101 @@
+{
+  "_catatan": "Selector di bawah adalah tebakan awal untuk UI Google Flow dan HARUS dikalibrasi sekali (lihat README bagian Kalibrasi). Kalau UI Flow berubah, cukup ubah file ini, tidak perlu ubah kode.",
+  "flowUrl": "file://__DIR__/mock-flow.html",
+  "browserChannel": "chrome",
+  "profileDir": "/tmp/mockprofile",
+  "maxAttemptsPerScene": 5,
+  "pauseBetweenScenesSec": [
+    1,
+    2
+  ],
+  "steps": [
+    {
+      "do": "goto",
+      "url": "{flowUrl}",
+      "onlyIfNotOnUrl": true
+    },
+    {
+      "do": "waitFor",
+      "selector": "textarea, [contenteditable='true']",
+      "timeoutSec": 90
+    },
+    {
+      "do": "click",
+      "selector": "button:has-text('Frames to Video'), button:has-text('Frame ke Video'), [role='option']:has-text('Frames to Video')",
+      "optional": true
+    },
+    {
+      "do": "click",
+      "selector": "button[aria-label*='frame' i], button:has-text('add'), button[aria-label*='Tambah' i]",
+      "optional": true
+    },
+    {
+      "do": "upload",
+      "selector": "input[type='file']",
+      "file": "{startFrame}"
+    },
+    {
+      "do": "click",
+      "selector": "button:has-text('Crop and Save'), button:has-text('Pangkas dan simpan'), button:has-text('Simpan')",
+      "optional": true,
+      "timeoutSec": 8
+    },
+    {
+      "do": "type",
+      "selector": "textarea, [contenteditable='true']",
+      "text": "{prompt}",
+      "clear": true
+    },
+    {
+      "do": "click",
+      "selector": "button[aria-label*='Generate' i], button[aria-label*='Buat' i], button:has-text('arrow_forward')"
+    }
+  ],
+  "result": {
+    "failTexts": [
+      "melanggar kebijakan",
+      "Pembuatan audio gagal",
+      "Pembuatan ini mungkin",
+      "might violate",
+      "violates our policies",
+      "Audio generation failed",
+      "Generation failed",
+      "Gagal"
+    ],
+    "audioFailTexts": [
+      "Pembuatan audio gagal",
+      "Audio generation failed"
+    ],
+    "successSelector": "video",
+    "timeoutSec": 30,
+    "pollSec": 1
+  },
+  "human": {
+    "typingMode": "mixed",
+    "charDelayMs": [
+      28,
+      95
+    ],
+    "pauseAfterPunctuationMs": [
+      120,
+      420
+    ],
+    "thinkingPauseChance": 0.015,
+    "thinkingPauseMs": [
+      600,
+      1800
+    ],
+    "typoChance": 0.006,
+    "mixedTypeFirstChars": 60,
+    "mouseSteps": [
+      18,
+      40
+    ],
+    "actionPauseMs": [
+      100,
+      300
+    ],
+    "idleWanderChance": 0.35
+  },
+  "executablePath": "/usr/bin/google-chrome"
+}
