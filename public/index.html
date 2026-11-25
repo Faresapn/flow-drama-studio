@@ -165,7 +165,18 @@ dialog::backdrop{background:rgba(23,25,27,.5)}
 .detail-top{display:grid;grid-template-columns:200px minmax(0,1fr);gap:20px;margin-top:16px}
 .detail-top video,.detail-top .ph{width:100%;aspect-ratio:9/16;border-radius:var(--r-sm);background:#0E1011;display:block}
 .detail-top .ph{display:grid;place-items:center;color:#9AA0A3;font-size:13px;text-align:center;padding:14px}
-.shot{display:grid;grid-template-columns:22px 1fr 1fr;gap:8px;align-items:start;margin-top:8px}
+.shot{display:grid;grid-template-columns:22px 1fr 1fr 96px;gap:8px;align-items:start;margin-top:8px}
+.shot select{font-size:13px;padding:6px}
+.checks label{display:flex;gap:8px;align-items:center;font-weight:400;margin:8px 0}
+.checks input{width:auto}
+.meta-box p{margin:6px 0;white-space:pre-wrap}
+.meta-box img{width:160px;border-radius:7px;display:block;margin:8px 0}
+.trim{display:grid;grid-template-columns:70px 1fr 1fr;gap:8px;align-items:center;margin-top:6px;font-size:13.5px}
+.stats{width:100%;border-collapse:collapse;font-size:13.5px;margin-top:10px}
+.stats th,.stats td{text-align:right;padding:6px 8px;border-bottom:1px solid var(--line)}
+.stats th:first-child,.stats td:first-child{text-align:left}
+.sugg label{display:flex;gap:8px;align-items:center;font-weight:400;margin:4px 0}
+.sugg input{width:auto}
 .shot>span{font-weight:700;color:var(--muted);padding-top:8px;font-size:13px}
 .chips{display:flex;flex-wrap:wrap;gap:6px}
 .chip{border:1px solid var(--line-2);border-radius:999px;padding:4px 11px;font-size:13px;cursor:pointer;background:var(--surface)}
@@ -239,6 +250,7 @@ details.sub summary{cursor:pointer;font-weight:600}
       <div class="acct"><select id="acct" aria-labelledby="acctLbl"></select><button class="btn sm" id="addAcct" title="Tambah akun Google">Tambah</button></div>
       <button class="btn sm" id="openFlow">Buka Google Flow</button>
       <button class="link" id="showRules" style="justify-self:start;font-size:13px">Cara kerja perbaikan prompt</button>
+      <button class="link" id="showStats" style="justify-self:start;font-size:13px">Statistik</button>
     </div>
   </aside>
   <div class="scrim" id="scrim"></div>
@@ -375,7 +387,34 @@ $('#openFlow').onclick = async () => { try { await api('/api/open-flow', { metho
 $('#showRules').onclick = () => {
   openDialog('Cara kerja perbaikan prompt', `<p class="hint">Kalau Flow menolak sebuah scene, prompt naik satu tingkat lalu dicoba lagi otomatis. Kalau yang gagal audionya, langsung lompat ke tingkat ${rules.audioFailJumpTo}.</p>
     <div class="levels">${rules.ladder.map(l => `<div class="lvl"><b>${l.level}</b><div>${esc(l.name)}<em>${esc(l.desc)}</em></div></div>`).join('')}</div>
-    <p class="hint">Daftar kata yang diganti ada di <code>config/fix-rules.json</code>.</p>`, `<button class="btn" data-close>Tutup</button>`);
+    <p class="hint">Daftar kata yang diganti ada di <code>config/fix-rules.json</code>.</p>`,
+    `<button class="btn" id="suggestRules" style="margin-right:auto">Usulkan aturan baru dari kegagalan</button><button class="btn" data-close>Tutup</button>`);
+  $('#suggestRules').onclick = suggestRules;
+};
+async function suggestRules() {
+  const b = $('#suggestRules'); b.disabled = true; b.textContent = 'Claude menganalisis kegagalan…';
+  let r;
+  try { r = await api('/api/rules/suggest', { method: 'POST', body: {} }); } catch (e) { toast(e.message, 1); b.disabled = false; b.textContent = 'Usulkan aturan baru dari kegagalan'; return; }
+  const items = [...r.replacements.map((x, i) => `<label><input type="checkbox" checked data-rep="${i}"> ganti <b>${esc(x[0])}</b> → ${esc(x[1] || '(hapus)')}</label>`),
+    ...r.riskyDialogueWords.map((w, i) => `<label><input type="checkbox" checked data-risk="${i}"> dialog berisiko: <b>${esc(w)}</b></label>`)].join('');
+  openDialog('Usulan aturan baru', `<p class="hint">Berdasarkan ${r.basedOn} prompt terakhir yang ditolak Flow.</p>${r.notes ? `<p>${esc(r.notes)}</p>` : ''}
+    <div class="sugg">${items || '<p class="hint">Tidak ada usulan baru. Aturan sekarang sudah mencakup pola kegagalan yang ada.</p>'}</div>`,
+    `<button class="btn" data-close>Batal</button>${items ? '<button class="btn primary" id="applyRules">Pakai yang dicentang</button>' : ''}`);
+  const ap = $('#applyRules'); if (ap) ap.onclick = async () => {
+    const replacements = $$('[data-rep]').filter(c => c.checked).map(c => r.replacements[+c.dataset.rep]);
+    const riskyDialogueWords = $$('[data-risk]').filter(c => c.checked).map(c => r.riskyDialogueWords[+c.dataset.risk]);
+    try { const x = await api('/api/rules/apply', { method: 'POST', body: { replacements, riskyDialogueWords } }); toast(`${x.added} aturan ditambahkan`); dlg.close(); rules = await api('/api/rules'); } catch (e) { toast(e.message, 1); }
+  };
+}
+$('#showStats').onclick = async () => {
+  const st = await api('/api/stats');
+  const row = (name, t) => `<tr><td>${esc(name)}</td><td>${t.episodes}</td><td>${t.scenesDone}/${t.scenes}</td><td>${t.generations}</td><td>${t.ok}</td><td>${t.policy}</td><td>${t.audio}</td><td>${t.timeout + t.error}</td><td>${t.maxLevel}</td><td>${t.needsVO}</td></tr>`;
+  const head = '<tr><th>Drama</th><th>Eps</th><th>Scene jadi</th><th>Generate</th><th>Berhasil</th><th>Ditolak</th><th>Audio gagal</th><th>Error lain</th><th>Tingkat maks</th><th>Butuh VO</th></tr>';
+  openDialog('Statistik', `<p class="hint">"Generate" = jumlah prompt yang benar-benar dikirim ke Flow (perkiraan kredit terpakai).</p>
+    <table class="stats">${head}${st.series.map(s => row(s.title, s)).join('')}${row('Total', st.total)}</table>
+    ${st.series.map(s => s.list.length ? `<details class="sub"><summary>${esc(s.title)}: per episode</summary><table class="stats">${head.replace('Drama', 'Episode')}${s.list.map(e => row(e.title, e)).join('')}</table></details>` : '').join('')}
+    ${st.topErrors.length ? `<h3 style="margin-top:16px;font-size:14px">Pesan gagal terbanyak</h3><ol class="hint">${st.topErrors.map(([m, n]) => `<li>${esc(m)} <b>(${n}×)</b></li>`).join('')}</ol>` : ''}`,
+    `<button class="btn" data-close>Tutup</button>`);
 };
 
 function openDialog(title, body, foot = '') {
@@ -395,6 +434,11 @@ function pickSheet(seriesId) {
 async function editSeries(id) {
   const s = id ? S.series.find(x => x.id === id) : { title: '', characters: [] };
   const acc = await api('/api/accounts').catch(() => ({ accounts: [], active: null }));
+  const opt = await api('/api/options').catch(() => ({ styles: [''], models: [''], voEnabled: false }));
+  const style = s.style || {};
+  const voiceTxt = Object.entries(s.voices || {}).map(([k, v]) => `${k} = ${v}`).join('\n');
+  const styleName = { '': 'Biasa', dramatis: 'Dramatis', santai: 'Santai', lucu: 'Lucu', tegang: 'Tegang', sedih: 'Sedih' };
+  const modelName = { '': 'Default Claude Code', opus: 'Opus (paling pintar)', sonnet: 'Sonnet (seimbang)', haiku: 'Haiku (paling cepat)' };
   const curAcc = s.accountId || acc.active;
   const txt = s.characters.map(c => `${c.key} | ${c.role} | ${c.look}`).join('\n');
   openDialog(id ? 'Pengaturan serial' : 'Serial baru', `
@@ -410,11 +454,28 @@ async function editSeries(id) {
       <label for="schars">Satu per baris: kode | peran | penampilan</label>
       <textarea id="schars" rows="6" placeholder="R | The wife | Indonesian woman, 32, sage green hijab, cream blouse">${esc(txt)}</textarea>
       <p class="hint">Tulis peran dalam bahasa Inggris tanpa nama, supaya nama tidak muncul sebagai teks di video.</p>
-    </details>`,
+    </details>
+    <details class="sub"><summary>Gaya tulisan Claude</summary>
+      <label for="sdial">Gaya dialog</label><select id="sdial">${opt.styles.map(k => `<option value="${k}" ${k === (style.dialog || '') ? 'selected' : ''}>${styleName[k] || k}</option>`).join('')}</select>
+      <label for="smodel">Model Claude</label><select id="smodel">${opt.models.map(k => `<option value="${k}" ${k === (style.model || '') ? 'selected' : ''}>${modelName[k] || k}</option>`).join('')}</select>
+      <label for="snotes">Catatan gaya (opsional)</label><textarea id="snotes" rows="2" placeholder="mis. ibu mertua selalu sinis, akhir tiap episode bikin penasaran">${esc(style.notes || '')}</textarea>
+    </details>
+    <details class="sub"><summary>Suara VO (ElevenLabs)</summary>
+      <p class="hint">${opt.voEnabled ? 'ElevenLabs tersambung.' : 'ELEVENLABS_API_KEY belum diisi, VO dilewati. Lihat README.'} VO dipakai untuk dialog yang dibuang dari prompt (tangga tingkat 3–4).</p>
+      <label for="svoice">Voice ID default</label><input type="text" id="svoice" value="${esc(s.defaultVoice || '')}" placeholder="kosong = ELEVENLABS_VOICE_ID">
+      <label for="svoices">Suara per tokoh: satu per baris, kode = voice ID</label><textarea id="svoices" rows="3" placeholder="W = 21m00Tcm4TlvDq8ikWAM">${esc(voiceTxt)}</textarea>
+    </details>
+    <details class="sub"><summary>Hasil video</summary><div class="checks">
+      <label><input type="checkbox" id="sburn" ${s.burnSubs ? 'checked' : ''}> Tempel subtitle di video (file .srt selalu dibuat)</label>
+      <label><input type="checkbox" id="smeta" ${s.autoMeta !== false ? 'checked' : ''}> Buat judul, deskripsi, hashtag, dan thumbnail otomatis</label>
+    </div></details>`,
     `${id ? '<button class="btn danger" id="delS" style="margin-right:auto">Hapus serial</button>' : ''}<button class="btn" data-close>Batal</button><button class="btn primary" id="saveS">${id ? 'Simpan' : 'Buat serial'}</button>`);
   $('#saveS').onclick = async () => {
     const characters = $('#schars').value.split('\n').map(l => l.split('|').map(x => x.trim())).filter(p => p.length >= 3 && p[0]).map(([key, role, ...look]) => ({ key, role, look: look.join(' | ') }));
-    const body = { title: $('#stitle').value.trim() || 'Serial baru', characters, accountId: $('#sacc').value || undefined };
+    const voices = Object.fromEntries($('#svoices').value.split('\n').map(l => l.split('=').map(x => x.trim())).filter(p => p.length === 2 && p[0] && p[1]));
+    const body = { title: $('#stitle').value.trim() || 'Serial baru', characters, accountId: $('#sacc').value || undefined,
+      style: { dialog: $('#sdial').value, model: $('#smodel').value, notes: $('#snotes').value.trim() },
+      defaultVoice: $('#svoice').value.trim(), voices, burnSubs: $('#sburn').checked, autoMeta: $('#smeta').checked };
     const files = [...$('#ssb').files].sort((a, b) => a.name.localeCompare(b.name, undefined, { numeric: true })), sheet = $('#ssheet').files[0];
     $('#saveS').disabled = true;
     try {
@@ -491,7 +552,7 @@ function renderMain() {
         <div class="sec-title"><h2 id="hFinal">Episode</h2>${ep.output ? `<span class="hint">${ep.output.total} detik</span>` : ''}</div>
         <div class="final">${ep.output
           ? `<video src="/files/${ep.output.file}?t=${ep.output.at}" controls preload="metadata" playsinline></video>
-             <div class="meta"><span class="hint">Gabungan ${ep.scenes.length} scene, 1080×1920</span><a class="btn primary sm" href="/files/${ep.output.file}" download>Unduh</a></div>`
+             <div class="meta"><span class="hint">Gabungan ${ep.scenes.length} scene, 1080×1920</span><span>${ep.output.srt ? `<a class="btn sm" href="/files/${ep.output.srt}" download>Subtitle .srt</a> ` : ''}<a class="btn primary sm" href="/files/${ep.output.file}" download>Unduh</a></span></div>`
           : `<div class="ph">Episode muncul di sini setelah ke-${ep.scenes.length} video scene jadi dan digabung.</div>
              <div class="meta"><span class="hint">${clips} dari ${ep.scenes.length} video scene siap</span></div>`}
         </div>
@@ -503,6 +564,8 @@ function renderMain() {
     </div>
 
     <div class="extras">
+      ${ep.output ? metaBox(ep) : ''}
+      ${clips ? previewBox(ep) : ''}
       ${ep.storyboard ? `<details class="box"><summary>Storyboard</summary><div class="inner"><img src="/files/${ep.storyboard}" alt="Storyboard ${esc(ep.title)}" style="width:100%;border-radius:7px;display:block"></div></details>` : ''}
       <details class="box" id="logBox" ${busy ? 'open' : ''}><summary>Aktivitas</summary><div class="inner"><pre class="console" id="console">Memuat…</pre></div></details>
     </div>`;
@@ -537,6 +600,31 @@ function progressBox(ep) {
     <div class="status-line ${bad ? 'bad' : ''}"><span class="msg">${esc(msg)}</span></div></div>`;
 }
 
+function metaBox(ep) {
+  const m = ep.meta;
+  return `<details class="box" open><summary>Judul & thumbnail untuk upload</summary><div class="inner meta-box">
+    ${m ? `<img src="/files/${m.thumbnail}?t=${m.at}" alt="Thumbnail ${esc(ep.title)}">
+      <a class="btn sm" href="/files/${m.thumbnail}" download>Unduh thumbnail</a>
+      <label>Judul</label><p id="mTitle">${esc(m.title)}</p>
+      <label>Deskripsi</label><p id="mDesc">${esc(m.description)}</p>
+      <label>Hashtag</label><p id="mTags">${esc(m.hashtags.join(' '))}</p>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:8px"><button class="btn sm" data-copy="mTitle">Salin judul</button><button class="btn sm" data-copy="all">Salin deskripsi + hashtag</button><button class="btn sm" id="remeta">Buat ulang</button></div>`
+    : `<p class="hint">Belum ada. Claude bisa menulis judul, deskripsi, hashtag, dan memilih thumbnail dari video.</p><button class="btn sm" id="remeta">Buat sekarang</button>`}
+  </div></details>`;
+}
+function previewBox(ep) {
+  const ready = ep.scenes.filter(s => s.clip);
+  return `<details class="box"><summary>Preview & potong sebelum digabung</summary><div class="inner">
+    <p class="hint">Putar semua scene berurutan. Atur potongan awal/akhir (detik) kalau ada bagian yang mau dibuang; kosong = otomatis.</p>
+    <video id="pv" controls playsinline style="width:220px;aspect-ratio:9/16;background:#0E1011;border-radius:7px;display:block"></video>
+    <div style="display:flex;gap:8px;margin:8px 0"><button class="btn sm" id="pvPlay">Putar semua dari awal</button><span class="hint" id="pvNow"></span></div>
+    <div class="trim" style="font-weight:600"><span>Scene</span><span>Mulai (detik)</span><span>Akhir (detik)</span></div>
+    ${ready.map(s => `<div class="trim"><span>Scene ${s.n}</span><input type="number" step="0.1" min="0" data-ts="${s.n}" value="${s.trimStart ?? ''}" placeholder="otomatis"><input type="number" step="0.1" min="0" data-te="${s.n}" value="${s.trimEnd ?? ''}" placeholder="sampai habis"></div>`).join('')}
+    <button class="btn primary sm" id="saveTrim" style="margin-top:10px" ${ready.length === ep.scenes.length ? '' : 'disabled'}>Simpan potongan & gabung ulang</button>
+    ${ready.length === ep.scenes.length ? '' : '<p class="hint">Gabung ulang bisa setelah semua scene punya video.</p>'}
+  </div></details>`;
+}
+
 function sceneCard(sc) {
   const s = sceneState(sc);
   let media;
@@ -555,7 +643,7 @@ function sceneCard(sc) {
       <div class="row"><span class="pill ${s.cls}">${s.text}</span><button class="btn sm" data-detail="${sc.n}">Detail</button></div>
     </div></article>`;
 }
-const sig = ep => JSON.stringify([(S.queue || []).indexOf(ep.id), ep.pipeline && ep.pipeline.stage, ep.output && ep.output.at, ep.scenes.map(s => [s.status, !!s.clip, !!s.flowName, s.startFrame, s.title])]);
+const sig = ep => JSON.stringify([(S.queue || []).indexOf(ep.id), ep.meta && ep.meta.at, ep.pipeline && ep.pipeline.stage, ep.output && ep.output.at, ep.scenes.map(s => [s.status, !!s.clip, !!s.flowName, s.startFrame, s.title])]);
 
 function bindMain(ep) {
   const t = $('#epTitle');
@@ -575,6 +663,35 @@ function bindMain(ep) {
   $('#mMerge').onclick = async () => { menu.classList.remove('open'); toast('Menggabungkan video…'); try { await api(`/api/episodes/${ep.id}/merge`, { method: 'POST' }); toast('Episode digabung ulang'); load(); } catch (e) { toast(e.message, 1); } };
   $('#mDel').onclick = async () => { if (!confirm('Hapus episode ini?')) return; await api(`/api/episodes/${ep.id}`, { method: 'DELETE' }); sel.ep = null; load(); };
   $('#scenes').onclick = e => { const b = e.target.closest('[data-detail]'); if (b) openScene(ep, +b.dataset.detail); };
+  const rm = $('#remeta'); if (rm) rm.onclick = async () => { rm.disabled = true; rm.textContent = 'Claude sedang menulis…'; try { await api(`/api/episodes/${ep.id}/meta`, { method: 'POST', body: {} }); toast('Judul & thumbnail siap'); load(); } catch (e) { toast(e.message, 1); rm.disabled = false; rm.textContent = 'Coba lagi'; } };
+  $$('[data-copy]').forEach(b => b.onclick = () => {
+    const m = ep.meta; const txt = b.dataset.copy === 'mTitle' ? m.title : `${m.description}\n\n${m.hashtags.join(' ')}`;
+    navigator.clipboard.writeText(txt); toast('Disalin');
+  });
+  const pv = $('#pv');
+  if (pv) {
+    const list = ep.scenes.filter(s => s.clip);
+    let i = 0;
+    const playAt = k => {
+      i = k; const s = list[i]; if (!s) { $('#pvNow').textContent = 'Selesai'; return; }
+      const a = s.trimStart ?? 0;
+      pv.src = `/files/${s.clip}#t=${a}${s.trimEnd != null ? ',' + s.trimEnd : ''}`;
+      $('#pvNow').textContent = `Scene ${s.n}`; pv.play().catch(() => {});
+    };
+    pv.onpause = () => { const s = list[i]; if (s && s.trimEnd != null && pv.currentTime >= s.trimEnd - 0.05) playAt(i + 1); };
+    pv.onended = () => playAt(i + 1);
+    $('#pvPlay').onclick = () => playAt(0);
+    $('#saveTrim').onclick = async () => {
+      try {
+        for (const s of list) {
+          const ts = $(`[data-ts="${s.n}"]`).value, te = $(`[data-te="${s.n}"]`).value;
+          await api(`/api/episodes/${ep.id}/scenes/${s.n}`, { method: 'PUT', body: { trimStart: ts === '' ? null : +ts, trimEnd: te === '' ? null : +te } });
+        }
+        toast('Potongan disimpan. Menggabungkan ulang…');
+        await api(`/api/episodes/${ep.id}/merge`, { method: 'POST' }); toast('Episode digabung ulang'); load();
+      } catch (e) { toast(e.message, 1); }
+    };
+  }
 }
 
 // ---------- Scene detail ----------
@@ -590,6 +707,7 @@ async function openScene(ep, n) {
         ${sc.needsVO && sc.needsVO.length ? `<div class="vo">Dialog yang perlu VO: ${sc.needsVO.map(v => `shot ${v.shot} "${esc(v.line)}"`).join(', ')}</div>` : ''}
       </div>
       <div>
+        ${sc.lastScreenshot && (sc.status === 'failed') ? `<div class="vo">Otomasi macet, kemungkinan tampilan Flow berubah. <a href="/files/${sc.lastScreenshot}" target="_blank" rel="noopener">Lihat screenshot</a>, lalu jalankan <code>npm run calibrate</code>.</div>` : ''}
         <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap"><span class="pill ${s.cls}">${s.text}</span>${sc.attempts.length ? `<span class="hint">${sc.attempts.length} percobaan</span>` : ''}${sc.flowName ? `<span class="hint">Di Flow: “${esc(sc.flowName)}”</span>` : ''}</div>
         ${sc.startFrame ? `<p class="hint" style="margin:12px 0 6px">Frame storyboard</p><img src="/files/${sc.startFrame}" alt="Storyboard scene ${n}" style="width:100%;border-radius:7px">` : ''}
         <label for="ftitle">Judul scene</label><input type="text" id="ftitle" value="${esc(sc.title)}">
@@ -600,10 +718,11 @@ async function openScene(ep, n) {
       <label for="fset">Setting (bahasa Inggris)</label><textarea id="fset" rows="2">${esc(sc.setting)}</textarea>
       <label>Tokoh di scene ini</label>
       <div class="chips">${series.characters.map(c => `<button type="button" class="chip" data-ch="${esc(c.key)}" aria-pressed="${sc.characters.includes(c.key)}">${esc(c.role.split(',')[0])}</button>`).join('') || '<span class="hint">Belum ada tokoh.</span>'}</div>
-      <label>Shot: aksi (Inggris) dan dialog (Indonesia)</label>
+      <label>Shot: aksi (Inggris), dialog (Indonesia), dan pembicara (untuk suara VO)</label>
       ${sc.shots.map((x, i) => `<div class="shot"><span aria-hidden="true">${i + 1}</span>
         <textarea data-a="${i}" rows="2" aria-label="Aksi shot ${i + 1}">${esc(x.action)}</textarea>
-        <textarea data-d="${i}" rows="2" aria-label="Dialog shot ${i + 1}" placeholder="tanpa dialog">${esc(x.dialogue)}</textarea></div>`).join('')}
+        <textarea data-d="${i}" rows="2" aria-label="Dialog shot ${i + 1}" placeholder="tanpa dialog">${esc(x.dialogue)}</textarea>
+        <select data-sp="${i}" aria-label="Pembicara shot ${i + 1}"><option value="">Pembicara</option>${series.characters.map(c => `<option value="${esc(c.key)}" ${x.speaker === c.key ? 'selected' : ''}>${esc(c.key)}</option>`).join('')}</select></div>`).join('')}
       <label for="faud">Audio</label><input type="text" id="faud" value="${esc(sc.audio)}">
       <label for="favoid">Tambahan yang dihindari</label><input type="text" id="favoid" value="${esc(sc.avoid || '')}">
     </details>
@@ -624,21 +743,26 @@ async function openScene(ep, n) {
       <div style="margin-top:8px">${sc.attempts.length ? sc.attempts.slice().reverse().map(a => `<div class="attempt"><span class="${a.result === 'ok' ? 'ok-t' : 'bad-t'}">${a.result === 'ok' ? 'Berhasil' : 'Gagal'}</span> · tingkat ${a.level} (${esc(a.levelName)}) · ${new Date(a.at).toLocaleString('id-ID')}${a.error ? `<br><span class="hint">${esc(a.error)}</span>` : ''}</div>`).join('') : '<p class="hint">Belum pernah dijalankan.</p>'}</div>
       ${sc.status === 'manual' || sc.status === 'failed' ? `<button class="btn sm" id="resetLvl" style="margin-top:8px">Ulang dari tingkat 0</button>` : ''}
     </details>`,
-    `<button class="btn" id="runOne" ${S.runner.running || !sc.startFrame ? 'disabled' : ''} style="margin-right:auto">${sc.clip ? 'Generate ulang' : 'Generate scene ini'}</button><button class="btn" data-close>Tutup</button><button class="btn primary" id="saveScene">Simpan</button>`);
+    `<button class="btn" id="runOne" ${S.runner.running || !sc.startFrame ? 'disabled' : ''} style="margin-right:auto">${sc.clip || sc.flowName ? 'Generate ulang (versi baru)' : 'Generate scene ini'}</button><button class="btn" data-close>Tutup</button><button class="btn primary" id="saveScene">Simpan</button>`);
 
   const box = dlg;
   box.querySelectorAll('.chip').forEach(c => c.onclick = () => c.setAttribute('aria-pressed', c.getAttribute('aria-pressed') !== 'true'));
   const collect = () => ({
     title: $('#ftitle').value, setting: $('#fset').value, audio: $('#faud').value, avoid: $('#favoid').value, customPrompt: $('#fcustom').value,
     characters: [...box.querySelectorAll('.chip[aria-pressed="true"]')].map(c => c.dataset.ch),
-    shots: sc.shots.map((_, i) => ({ action: box.querySelector(`[data-a="${i}"]`).value, dialogue: box.querySelector(`[data-d="${i}"]`).value })),
+    shots: sc.shots.map((_, i) => ({ action: box.querySelector(`[data-a="${i}"]`).value, dialogue: box.querySelector(`[data-d="${i}"]`).value, speaker: box.querySelector(`[data-sp="${i}"]`).value })),
   });
   $('#saveScene').onclick = async () => { await api(`/api/episodes/${ep.id}/scenes/${n}`, { method: 'PUT', body: collect() }); toast(`Scene ${n} tersimpan`); dlg.close(); load(); };
   $('#lvlSel').onchange = async () => { const p = await api(`/api/episodes/${ep.id}/scenes/${n}/prompt?level=${$('#lvlSel').value}`); $('#promptPre').textContent = p.prompt; };
   $('#copyPrompt').onclick = () => { navigator.clipboard.writeText($('#promptPre').textContent); toast('Prompt disalin'); };
   $('#setLevel').onclick = async () => { await api(`/api/episodes/${ep.id}/scenes/${n}`, { method: 'PUT', body: { fixLevel: +$('#lvlSel').value } }); toast('Tingkat awal diubah'); load(); };
   $('#runOne').onclick = async () => {
-    if (sc.clip && !confirm('Scene ini sudah punya video. Generate ulang?')) return;
+    if (sc.clip || sc.flowName) {
+      if (!confirm('Buat video baru untuk scene ini? Video lama dilepas, versi baru dibuat di Flow, diunduh, lalu episode digabung ulang.')) return;
+      await api(`/api/episodes/${ep.id}/scenes/${n}`, { method: 'PUT', body: collect() });
+      try { await api(`/api/episodes/${ep.id}/scenes/${n}/redo`, { method: 'POST', body: { fromLevel0: true } }); toast(`Scene ${n} masuk antrean (versi baru)`); dlg.close(); setTimeout(load, 800); } catch (e) { toast(e.message, 1); }
+      return;
+    }
     await api(`/api/episodes/${ep.id}/scenes/${n}`, { method: 'PUT', body: { ...collect(), status: 'draft' } });
     try { await api('/api/run', { method: 'POST', body: { episodeId: ep.id, scenes: [n] } }); toast('Scene masuk antrean'); dlg.close(); setTimeout(load, 800); } catch (e) { toast(e.message, 1); }
   };

@@ -25,6 +25,7 @@ Semua data tersimpan di komputer sendiri (`data/`). Tidak ada server luar selain
 - [Pengaturan](#pengaturan)
 - [Struktur folder](#struktur-folder)
 - [Antrean, akun, dan notifikasi](#antrean-akun-dan-notifikasi)
+- [VO, subtitle, dan teks upload](#vo-subtitle-dan-teks-upload)
 - [Uji](#uji)
 - [Masalah umum](#masalah-umum)
 - [Saran fitur & rencana update](SARAN.md)
@@ -50,6 +51,16 @@ Semua data tersimpan di komputer sendiri (`data/`). Tidak ada server luar selain
 | **1 drama = 1 akun Google** | Tiap serial dipasangkan ke satu akun Google Flow. Antrean pindah akun sendiri saat giliran drama lain. Login tiap akun cukup sekali. |
 | **Antrean banyak episode** | Pilih banyak storyboard sekaligus: tiap gambar jadi satu episode (urut nama file) dan diproses bergiliran. Antrean terlihat di menu samping, episode bisa dikeluarkan dari antrean. |
 | **Notifikasi** | Pop-up macOS (dan Telegram kalau diatur) saat episode jadi, perlu dicek, berhenti karena error, atau kredit akun habis. |
+| **VO otomatis** | Dialog yang dibuang dari prompt (tangga tingkat 3–4) dibuatkan suara lewat ElevenLabs, lalu ditempel ke klip saat digabung. Suara bisa diatur per tokoh. |
+| **Subtitle** | File `.srt` selalu dibuat dari dialog. Opsional: subtitle ditempel langsung ke video (atur per serial). |
+| **Judul, deskripsi, hashtag, thumbnail** | Setelah episode jadi, Claude menulis teks upload dan memilih frame terbaik untuk thumbnail. Tinggal salin. |
+| **Generate ulang satu scene** | Hasil jelek tapi tidak error? Klik **Generate ulang (versi baru)** di detail scene: video baru dibuat (nama di Flow diberi akhiran `v2`, `v3`, …), diunduh, lalu episode digabung ulang. |
+| **Preview & potong** | Putar semua scene berurutan, atur potongan awal/akhir tiap scene, lalu gabung ulang. |
+| **Usulan aturan perbaikan** | Claude membaca prompt yang pernah ditolak Flow dan mengusulkan kata pengganti baru. Kamu pilih mana yang dipakai, lalu otomatis masuk ke `config/fix-rules.json`. |
+| **Peringatan tampilan Flow berubah** | Kalau otomasi macet (tombol tidak ketemu), screenshot halaman Flow disimpan di `data/debug/` dan notifikasi dikirim (Telegram ikut mengirim gambarnya). |
+| **Statistik** | Jumlah generate (perkiraan kredit), berhasil, ditolak, audio gagal, tingkat tertinggi, dan pesan gagal terbanyak, per drama dan per episode. |
+| **Gaya Claude per drama** | Pilih gaya dialog (dramatis, santai, lucu, tegang, sedih), model Claude (Opus/Sonnet/Haiku), dan catatan gaya bebas. |
+| **Aman di jaringan** | Dashboard hanya bisa dibuka dari Mac sendiri (`127.0.0.1`). |
 | **Log langsung** | Progres tiap langkah tampil di dashboard. |
 
 ---
@@ -256,6 +267,10 @@ Gagal audio ("Pembuatan audio gagal") langsung lompat ke tingkat 3. Daftar kata 
 | `NOTIFY_MAC` | Isi `0` untuk mematikan pop-up notifikasi macOS. |
 | `TELEGRAM_BOT_TOKEN` | Opsional. Token bot Telegram untuk notifikasi ke HP. |
 | `TELEGRAM_CHAT_ID` | Opsional. Chat ID tujuan notifikasi Telegram. |
+| `ELEVENLABS_API_KEY` | Opsional. Kunci API ElevenLabs untuk VO. Tanpa ini, VO dilewati. |
+| `ELEVENLABS_VOICE_ID` | Opsional. Voice ID default kalau serial tidak mengatur suara. |
+| `ELEVENLABS_MODEL` | Opsional. Model TTS (default `eleven_multilingual_v2`). |
+| `HOST` | Alamat server (default `127.0.0.1`, hanya Mac ini). `0.0.0.0` membuka ke jaringan, tidak disarankan. |
 
 ---
 
@@ -295,6 +310,39 @@ Notifikasi dikirim saat episode jadi, perlu dicek, berhenti karena error, atau k
 
 ---
 
+## VO, subtitle, dan teks upload
+
+Pengaturan ada di dialog serial (klik ⋯ di samping nama serial).
+
+### VO (ElevenLabs)
+
+Di tangga perbaikan tingkat 3–4, dialog dibuang dari prompt supaya Flow mau membuat video. Dialog itu dibuatkan suara dan ditempel ke klip saat episode digabung.
+
+1. Buat API key di [elevenlabs.io](https://elevenlabs.io) (Profile → API Keys).
+2. Jalankan:
+   ```bash
+   ELEVENLABS_API_KEY=sk_... npm start
+   ```
+3. Di dialog serial → **Suara VO**: isi **Voice ID default**, dan (opsional) suara per tokoh, satu per baris: `W = <voice_id>`. Voice ID ada di halaman Voices ElevenLabs.
+4. Pembicara tiap shot diisi Claude otomatis. Bisa diubah di detail scene (kolom **Pembicara**).
+
+VO disimpan di `data/episodes/<id>/vo/` dan dipakai ulang kalau teksnya sama (tidak bayar dua kali).
+
+### Subtitle
+
+- File `.srt` selalu dibuat di samping video episode (tombol **Subtitle .srt**). Bisa diunggah ke YouTube.
+- Centang **Tempel subtitle di video** di dialog serial → **Hasil video** untuk menempel teks langsung ke video.
+
+### Judul, deskripsi, hashtag, dan thumbnail
+
+Setelah episode digabung, Claude menulis judul, deskripsi, hashtag, dan memilih thumbnail dari beberapa frame. Hasilnya ada di bagian **Judul & thumbnail untuk upload** di halaman episode, lengkap dengan tombol salin. Matikan di dialog serial → **Hasil video** kalau tidak perlu.
+
+### Preview & potong
+
+Di halaman episode → **Preview & potong sebelum digabung**: putar semua scene berurutan, isi detik awal/akhir yang mau dipakai, lalu **Simpan potongan & gabung ulang**.
+
+---
+
 ## Struktur folder
 
 ```
@@ -309,6 +357,8 @@ flow-drama-studio/
 │   ├── crop.js         # potong storyboard (sharp)
 │   ├── merge.js        # gabung video (ffmpeg)
 │   ├── notify.js       # notifikasi macOS + Telegram
+│   ├── vo.js           # VO ElevenLabs
+│   ├── subs.js         # subtitle .srt + teks tempel
 │   ├── calibrate.js    # bantu cari selector Flow
 │   └── store.js        # simpan data ke data/db.json
 ├── public/index.html   # dashboard
@@ -327,11 +377,11 @@ Data tersimpan di `data/`. Back up folder itu (dan `browser-profile/` kalau mau 
 ## Uji
 
 ```bash
-npm test             # tangga prompt + crop storyboard contoh
+npm test             # tangga prompt + crop storyboard + subtitle
 npm run test:runner  # Playwright melawan halaman Flow palsu (gagal kebijakan → gagal audio → berhasil)
 ```
 
-> `npm test` butuh `test/sample-storyboard.png`, yang tidak ikut di repo (gambar tidak di-push). Taruh satu gambar storyboard sendiri dengan nama itu sebelum menjalankan test.
+> `npm test` memakai `test/sample-storyboard.png` kalau ada. Kalau tidak ada (gambar tidak ikut di repo), storyboard buatan dibuat otomatis oleh `test/make-sample.js`.
 
 ---
 
@@ -347,3 +397,5 @@ npm run test:runner  # Playwright melawan halaman Flow palsu (gagal kebijakan �
 | "Kredit Flow habis" | Isi kredit atau pindah ke akun Google lain dari dashboard, lalu klik **Lanjutkan**. |
 | Video ada di akun lain | Pindah ke akun tempat episode itu dibuat, baru unduh. |
 | Gagal gabung video | Pastikan `ffmpeg` terpasang (`ffmpeg -version`). |
+| VO tidak muncul | Cek `ELEVENLABS_API_KEY` dan Voice ID di dialog serial. Pesan gagal ada di Aktivitas. |
+| Dashboard tidak bisa dibuka dari HP/laptop lain | Disengaja demi keamanan. Kalau benar-benar perlu, jalankan dengan `HOST=0.0.0.0` di jaringan yang kamu percaya. |

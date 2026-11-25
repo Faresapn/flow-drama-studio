@@ -44,28 +44,64 @@ async function collageLead(file) {
 }
 
 /**
- * clips: [{file, trimStart?, trimEnd?}] urut. out: file mp4 tujuan.
+ * clips: [{file, trimStart?, trimEnd?, vo?: [{file, at}]}] urut. out: file mp4 tujuan.
+ * opts.overlays(segs) -> [{file, start, end, height}] gambar teks (subtitle) yang ditempel.
  */
-async function mergeEpisode(clips, out) {
+async function mergeEpisode(clips, out, opts = {}) {
   const fc = [], inputs = [];
   const segs = [];
+  // Lewat 1: ukur durasi dan potongan tiap klip.
   for (let i = 0; i < clips.length; i++) {
     const c = clips[i];
-    inputs.push('-i', c.file);
     const dur = await duration(c.file);
     const t0 = c.trimStart != null ? c.trimStart : await collageLead(c.file);
-    const t1 = c.trimEnd != null ? c.trimEnd : dur;
-    const d = t1 - t0;
+    const t1 = c.trimEnd != null ? Math.min(c.trimEnd, dur) : dur;
+    if (t1 - t0 < 0.3) throw new Error(`Scene ${i + 1}: potongan terlalu pendek (${t0.toFixed(2)}–${t1.toFixed(2)} detik)`);
+    segs.push({ scene: i + 1, trimStart: +t0.toFixed(3), length: +(t1 - t0).toFixed(2), t0, t1 });
+  }
+  clips.forEach(c => inputs.push('-i', c.file));
+  let next = clips.length;
+  for (let i = 0; i < clips.length; i++) {
+    const { t0, t1 } = segs[i], d = t1 - t0;
     fc.push(`[${i}:v]trim=${t0.toFixed(3)}:${t1.toFixed(3)},setpts=PTS-STARTPTS,scale=1080:1920:force_original_aspect_ratio=increase:flags=lanczos,crop=1080:1920,setsar=1,fps=24,format=yuv420p[v${i}]`);
-    fc.push(`[${i}:a]atrim=${t0.toFixed(3)}:${t1.toFixed(3)},asetpts=PTS-STARTPTS,aresample=48000,aformat=channel_layouts=stereo,afade=t=in:d=0.02,afade=t=out:st=${(d - 0.03).toFixed(3)}:d=0.03[a${i}]`);
-    segs.push({ scene: i + 1, trimStart: +t0.toFixed(3), length: +d.toFixed(2) });
+    const vo = (clips[i].vo || []).filter(v => v.at - t0 < d - 0.3);
+    const base = `[${i}:a]atrim=${t0.toFixed(3)}:${t1.toFixed(3)},asetpts=PTS-STARTPTS,aresample=48000,aformat=channel_layouts=stereo`;
+    if (!vo.length) {
+      fc.push(`${base},afade=t=in:d=0.02,afade=t=out:st=${(d - 0.03).toFixed(3)}:d=0.03[a${i}]`);
+    } else {
+      // VO ditaruh sesuai waktu shot, suara klip diturunkan sedikit supaya VO jelas.
+      fc.push(`${base},volume=0.7[ab${i}]`);
+      const labels = [`[ab${i}]`];
+      vo.forEach((v, k) => {
+        inputs.push('-i', v.file);
+        const ms = Math.max(0, Math.round((v.at - t0) * 1000));
+        fc.push(`[${next}:a]aresample=48000,aformat=channel_layouts=stereo,adelay=${ms}|${ms}[vo${i}_${k}]`);
+        labels.push(`[vo${i}_${k}]`); next++;
+      });
+      fc.push(`${labels.join('')}amix=inputs=${labels.length}:normalize=0:duration=first,atrim=0:${d.toFixed(3)},afade=t=in:d=0.02,afade=t=out:st=${(d - 0.03).toFixed(3)}:d=0.03[a${i}]`);
+    }
   }
   fc.push(clips.map((_, i) => `[v${i}][a${i}]`).join('') + `concat=n=${clips.length}:v=1:a=1[vc][ac]`);
   fc.push('[ac]loudnorm=I=-14:TP=-1.5:LRA=11,aresample=48000[ao]');
+  // Subtitle tempel: overlay gambar teks bergantian sesuai waktunya.
+  const overlays = opts.overlays ? await opts.overlays(segs.map(({ scene, trimStart, length }) => ({ scene, trimStart, length }))) : [];
+  let vLabel = '[vc]';
+  overlays.forEach((o, k) => {
+    inputs.push('-i', o.file);
+    const y = Math.max(0, 1920 - 430 - o.height);
+    fc.push(`${vLabel}[${next}:v]overlay=0:${y}:enable='between(t,${o.start.toFixed(3)},${o.end.toFixed(3)})'[ov${k}]`);
+    vLabel = `[ov${k}]`; next++;
+  });
   await run('ffmpeg', ['-v', 'error', '-y', ...inputs, '-filter_complex', fc.join(';'),
-    '-map', '[vc]', '-map', '[ao]', '-c:v', 'libx264', '-preset', 'medium', '-crf', '18', '-pix_fmt', 'yuv420p',
+    '-map', vLabel, '-map', '[ao]', '-c:v', 'libx264', '-preset', 'medium', '-crf', '18', '-pix_fmt', 'yuv420p',
     '-c:a', 'aac', '-b:a', '192k', '-movflags', '+faststart', out]);
-  return { out, segs, total: +(await duration(out)).toFixed(2) };
+  return { out, segs: segs.map(({ scene, trimStart, length }) => ({ scene, trimStart, length })), total: +(await duration(out)).toFixed(2) };
 }
 
-module.exports = { mergeEpisode, collageLead, duration };
+/** Ambil satu frame (jpg) pada detik tertentu. */
+async function frameAt(file, t, out) {
+  await run('ffmpeg', ['-v', 'error', '-y', '-ss', t.toFixed(2), '-i', file, '-frames:v', '1', '-q:v', '3', out]);
+  return out;
+}
+
+module.exports = { mergeEpisode, collageLead, duration, frameAt };

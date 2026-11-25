@@ -1,75 +1,35 @@
 # Saran Fitur & Rencana Update
 
-Daftar fitur yang belum ada. Centang (`[x]`) kalau sudah dikerjakan.
-
-Urutan kerja yang disarankan: **#13 → #1 → #2**, lalu sisanya sesuai kebutuhan.
-
-Sudah dikerjakan: #3 notifikasi (macOS + Telegram), #5 antrean banyak episode, plus **1 drama = 1 akun Google** (lihat README).
+Daftar fitur. Centang (`[x]`) kalau sudah dikerjakan.
 
 ---
 
-## Paling berdampak
+## Sudah dikerjakan
 
-- [ ] **1. VO otomatis untuk dialog yang dibuang**
-  Di tangga perbaikan tingkat 3 dan 4, dialog cuma dicatat "untuk VO", tapi belum ada yang membuat suaranya. Sambungkan ke ElevenLabs atau Fish Audio, lalu tempel audionya ke klip saat digabung. Tanpa ini, scene yang turun tangga jadi bisu.
-  File terkait: `src/prompt.js`, `src/merge.js`
+- [x] **1. VO otomatis untuk dialog yang dibuang** — ElevenLabs, suara per tokoh, ditempel saat digabung. (`src/vo.js`)
+- [x] **2. Subtitle otomatis** — `.srt` selalu dibuat, opsional ditempel ke video. (`src/subs.js`)
+- [x] **3. Notifikasi** — macOS + Telegram. (`src/notify.js`)
+- [x] **4. Aturan perbaikan belajar sendiri** — Claude mengusulkan kata baru dari prompt yang ditolak, kamu pilih yang dipakai.
+- [x] **5. Antrean banyak episode** — plus 1 drama = 1 akun Google.
+- [x] **6. Generate ulang satu scene** — versi baru (`v2`, `v3`…), diunduh, episode digabung ulang.
+- [x] **7. Preview & potong sebelum digabung**
+- [x] **8. Judul, deskripsi, hashtag, dan thumbnail otomatis**
+- [x] **10. Peringatan tampilan Flow berubah** — screenshot + notifikasi.
+- [x] **11. Statistik per drama dan per episode**
+- [x] **12. Gaya dan model Claude per drama**
+- [x] **13. Dashboard hanya bisa dibuka dari Mac sendiri**
+- [x] **14. Storyboard contoh untuk test** — dibuat otomatis oleh `test/make-sample.js`.
 
-- [ ] **2. Subtitle otomatis**
-  Dialog per shot sudah ada di data. Ubah jadi file `.srt` atau tempel langsung ke video saat digabung (burn-in). Penting untuk Shorts karena banyak yang menonton tanpa suara.
-  File terkait: `src/merge.js`
+## Belum dikerjakan
 
-- [x] **3. Notifikasi saat episode selesai atau macet**
-  Antrean bisa berjalan berjam-jam. Kirim notifikasi macOS, Telegram, atau WhatsApp saat status "Perlu dicek", kredit habis, atau episode jadi.
-  File terkait: `src/pipeline.js`
+- [ ] **9. Upload langsung ke YouTube Shorts / TikTok**
+  Ditunda karena butuh persiapan di luar kode:
+  - **YouTube:** buat project di Google Cloud Console, aktifkan YouTube Data API v3, buat OAuth client (Desktop app), lalu login sekali. Kuota harian API terbatas (±6 upload/hari di kuota default).
+  - **TikTok:** Content Posting API butuh aplikasi developer yang disetujui TikTok. Sebelum disetujui, video hanya bisa diunggah sebagai privat/draft.
+  Kalau sudah siap minimal untuk YouTube, fitur ini bisa ditambahkan: unggah video + judul + deskripsi + hashtag + thumbnail + subtitle `.srt` yang sudah dibuat otomatis.
 
-- [ ] **4. Aturan perbaikan yang belajar sendiri**
-  Tiap kali Flow menolak, catat kata pemicunya, lalu minta Claude mengusulkan kata pengganti untuk `config/fix-rules.json`. Sekarang file itu masih diisi manual.
-  File terkait: `src/runner.js`, `config/fix-rules.json`
+## Ide berikutnya
 
-## Menghemat waktu
-
-- [x] **5. Antrean banyak episode sekaligus**
-  Unggah beberapa storyboard, biarkan jalan semalaman, dan pindah akun Google otomatis kalau kredit habis. Pindah akun sudah bisa, tapi masih manual.
-  File terkait: `src/pipeline.js`, `src/runner.js`
-
-- [ ] **6. Ulang satu scene dari dashboard**
-  Tombol "ulang scene n" dengan prompt yang sudah diedit, untuk hasil video yang jelek tapi tidak error. Tidak perlu mengulang satu episode.
-  File terkait: `public/index.html`, `src/server.js`
-
-- [ ] **7. Preview sebelum digabung**
-  Putar semua klip berurutan di dashboard, atur potongan awal/akhir (`trimStart` / `trimEnd` sudah ada di kode), baru digabung.
-  File terkait: `public/index.html`
-
-- [ ] **8. Thumbnail dan judul otomatis**
-  Claude membuat judul, deskripsi, dan hashtag, plus memilih frame terbaik untuk thumbnail.
-  File terkait: `src/autoprompt.js`
-
-- [ ] **9. Upload langsung ke YouTube Shorts atau TikTok**
-  Setelah episode jadi, unggah otomatis.
-
-## Biar lebih kuat
-
-- [ ] **10. Peringatan kalau tampilan Flow berubah**
-  Kalau tombol tidak ketemu, kirim notifikasi dan screenshot halaman Flow, supaya langsung tahu harus kalibrasi ulang. Sekarang antreannya cuma macet.
-  File terkait: `src/runner.js`
-
-- [ ] **11. Statistik gagal per scene**
-  Catat berapa kali ditolak, sampai tingkat berapa, dan kredit yang terpakai per episode, supaya kelihatan pola konten yang sering ditolak.
-  File terkait: `src/runner.js`, `src/store.js`
-
-- [ ] **12. Pilihan model atau gaya Claude di dashboard**
-  Misalnya gaya dialog (lebih dramatis atau santai), tanpa harus edit `buildInstruction` di kode.
-  File terkait: `src/autoprompt.js`, `public/index.html`
-
-## Keamanan
-
-- [ ] **13. Dashboard hanya bisa dibuka dari Mac sendiri**
-  Sekarang `app.listen(PORT)` di `src/server.js` terbuka ke semua perangkat di WiFi yang sama. Siapa pun di jaringan itu bisa membuka dashboard dan menjalankan Flow memakai akun Google kamu. Perbaikannya satu baris:
-  ```js
-  app.listen(PORT, '127.0.0.1', () => { ... });
-  ```
-
-## Lain-lain
-
-- [ ] **14. Gambar contoh untuk test**
-  `npm test` butuh `test/sample-storyboard.png`, yang tidak ikut di repo. Tambahkan gambar storyboard contoh (boleh dummy) dan kecualikan dari `.gitignore`, supaya test bisa jalan setelah clone.
+- [ ] **15. Pilih suara VO dari daftar** — ambil daftar suara ElevenLabs dan pilih di dashboard, tidak perlu salin Voice ID manual.
+- [ ] **16. Jadwal antrean** — jalan otomatis di jam tertentu (mis. malam), berhenti pagi.
+- [ ] **17. Ganti akun otomatis saat kredit habis** — kalau drama boleh pakai akun cadangan, pindah sendiri tanpa menunggu.

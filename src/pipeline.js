@@ -5,8 +5,10 @@ const fs = require('fs');
 const store = require('./store');
 const runner = require('./runner');
 const { cropStoryboard } = require('./crop');
-const { autoFill } = require('./autoprompt');
-const { mergeEpisode } = require('./merge');
+const { autoFill, episodeMeta } = require('./autoprompt');
+const { mergeEpisode, frameAt } = require('./merge');
+const vo = require('./vo');
+const subs = require('./subs');
 
 const epDir = ep => path.join(store.DATA_DIR, 'episodes', ep.id);
 const rel = abs => path.relative(store.DATA_DIR, abs).split(path.sep).join('/');
@@ -37,15 +39,53 @@ function setStage(ep, stage, extra = {}) {
   store.save();
 }
 
-async function mergeEp(ep) {
+async function mergeEp(ep, log = m => runner.log(`${ep.title}: ${m}`)) {
   const series = store.series(ep.seriesId);
   const name = ep.title.toLowerCase().startsWith(series.title.toLowerCase()) ? safe(ep.title) : `${safe(series.title)}_${safe(ep.title)}`;
   const out = path.join(epDir(ep), `${name}.mp4`);
-  const clips = ep.scenes.map(s => ({ file: path.join(store.DATA_DIR, s.clip), trimStart: s.trimStart, trimEnd: s.trimEnd }));
-  const r = await mergeEpisode(clips, out);
-  ep.output = { file: rel(out), total: r.total, segs: r.segs, at: Date.now() };
+  // VO untuk dialog yang dibuang dari prompt (tangga tingkat 3-4).
+  const voDir = path.join(epDir(ep), 'vo');
+  const clips = [];
+  for (const s of ep.scenes) {
+    clips.push({ file: path.join(store.DATA_DIR, s.clip), trimStart: s.trimStart, trimEnd: s.trimEnd, vo: await vo.sceneVO(series, s, voDir, log) });
+  }
+  // Subtitle: selalu buat .srt; tempel ke video kalau serial memintanya.
+  let cueList = [];
+  const r = await mergeEpisode(clips, out, {
+    overlays: async segs => {
+      cueList = subs.cues(ep.scenes, segs);
+      if (!series.burnSubs || !cueList.length) return [];
+      return subs.renderAll(cueList, path.join(epDir(ep), 'subs'));
+    },
+  });
+  const srt = out.replace(/\.mp4$/, '.srt');
+  if (cueList.length) fs.writeFileSync(srt, subs.toSrt(cueList));
+  ep.output = { file: rel(out), srt: cueList.length ? rel(srt) : null, total: r.total, segs: r.segs, at: Date.now() };
   store.save();
   return ep.output;
+}
+
+/** Judul, deskripsi, hashtag, dan thumbnail (dipilih Claude dari beberapa frame). Tidak menghentikan alur kalau gagal. */
+async function makeMeta(ep, log = m => runner.log(`${ep.title}: ${m}`)) {
+  const series = store.series(ep.seriesId);
+  if (!ep.output) throw new Error('Episode belum digabung');
+  const dir = path.join(epDir(ep), 'thumbs'); fs.mkdirSync(dir, { recursive: true });
+  const video = path.join(store.DATA_DIR, ep.output.file);
+  const frames = [];
+  let t = 0;
+  for (const seg of ep.output.segs || []) {
+    const f = path.join(dir, `cand_${seg.scene}.jpg`);
+    await frameAt(video, t + seg.length * 0.45, f).then(() => frames.push(f)).catch(() => {});
+    t += seg.length;
+  }
+  if (!frames.length) throw new Error('Tidak bisa mengambil frame dari video');
+  log('Claude menulis judul, deskripsi, hashtag, dan memilih thumbnail…');
+  const m = await episodeMeta(series, ep, frames, dir);
+  const thumb = path.join(dir, 'thumbnail.jpg');
+  fs.copyFileSync(frames[m.thumbnail], thumb);
+  ep.meta = { title: m.title, description: m.description, hashtags: m.hashtags, thumbnail: rel(thumb), at: Date.now() };
+  store.save();
+  return ep.meta;
 }
 
 async function crop(ep) {
@@ -117,7 +157,8 @@ async function process_(epId, { skipPrompt = false, onlyScenes = null, resume = 
 
     setStage(ep, 'merging');
     log('Menggabungkan semua scene…');
-    await mergeEp(ep);
+    await mergeEp(ep, log);
+    if (series.autoMeta !== false) await makeMeta(ep, log).catch(e => log(`Judul & thumbnail gagal dibuat: ${e.message}`));
     setStage(ep, 'done');
     log(`Episode jadi (${ep.output.total} detik). Siap diunduh.`);
     notify(`Episode jadi: ${label}`, `${ep.output.total} detik. Siap diunduh di dashboard.`);
@@ -156,4 +197,4 @@ function stopAll() {
   runner.stop();
 }
 
-module.exports = { start, cancel, stopAll, mergeEp, seriesAccount, isActive: id => active.has(id), get queue() { return [...queue]; } };
+module.exports = { start, cancel, stopAll, mergeEp, makeMeta, seriesAccount, isActive: id => active.has(id), get queue() { return [...queue]; } };

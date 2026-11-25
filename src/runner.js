@@ -6,6 +6,7 @@ const { chromium } = require('playwright');
 const store = require('./store');
 const prompt = require('./prompt');
 const { Human, sleep, rand } = require('./human');
+const { notify } = require('./notify');
 
 const ROOT = path.join(__dirname, '..');
 const CFG_FILE = process.env.FLOW_CONFIG ? path.resolve(process.env.FLOW_CONFIG) : path.join(ROOT, 'config', 'flow.json');
@@ -143,7 +144,8 @@ async function ensureProject(target, title = target.title) {
 }
 // Satu project Flow per episode, supaya video antar-episode tidak tercampur.
 const episodeProjectTitle = (series, ep) => (ep.title.toLowerCase().startsWith(series.title.toLowerCase()) ? ep.title : `${series.title} – ${ep.title}`).slice(0, 100);
-const sceneVideoName = (ep, n) => `Scene ${n} – ${ep.title}`.slice(0, 80);
+// Versi > 1 (generate ulang) diberi akhiran supaya tidak tertukar dengan video lama di Flow.
+const sceneVideoName = (ep, sc) => `Scene ${sc.n} – ${ep.title}`.slice(0, 74) + (sc.version > 1 ? ` v${sc.version}` : '');
 
 function fill(str, vars) {
   return String(str).replace(/\{(\w+)\}/g, (_, k) => (vars[k] !== undefined ? vars[k] : `{${k}}`));
@@ -458,6 +460,17 @@ async function downloadTile(tile, dest) {
   return { bytes };
 }
 
+async function flowScreenshot(tag) {
+  if (!page) return null;
+  try {
+    const dir = path.join(store.DATA_DIR, 'debug'); fs.mkdirSync(dir, { recursive: true });
+    const file = path.join(dir, `${new Date().toISOString().replace(/[:.]/g, '-')}_${tag}.png`);
+    await page.screenshot({ path: file, timeout: 15000 });
+    log(`Screenshot halaman Flow disimpan: ${file}`);
+    return file;
+  } catch { return null; }
+}
+
 const escapeRe = s => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 
 async function runScene(ep, scene) {
@@ -506,7 +519,7 @@ async function runScene(ep, scene) {
       if (r.ok) {
         scene.status = 'done';
         scene.needsVO = built.needsVO;
-        const name = sceneVideoName(ep, scene.n);
+        const name = sceneVideoName(ep, scene);
         try {
           const idx = await newTileIndex(srcsBefore);
           await renameTile(page.locator(loadCfg().result.download.tile).nth(idx), name);
@@ -538,6 +551,10 @@ async function runScene(ep, scene) {
       scene.attempts.push(attempt);
       scene.status = 'failed'; scene.lastError = e.message;
       log(`Scene ${scene.n}: ERROR otomasi: ${e.message}. Cek selector di config/flow.json.`);
+      // Kemungkinan tampilan Flow berubah: simpan screenshot dan beri tahu.
+      const shot = await flowScreenshot(`${ep.id}_scene${scene.n}`);
+      scene.lastScreenshot = shot ? path.relative(store.DATA_DIR, shot).split(path.sep).join('/') : null;
+      notify('Tampilan Flow mungkin berubah', `${ep.title} scene ${scene.n}: ${e.message.split('\n')[0].slice(0, 160)}. Jalankan npm run calibrate.${shot ? ` Screenshot: ${shot}` : ''}`, shot);
       store.save();
       return;
     }

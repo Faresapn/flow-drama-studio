@@ -7,9 +7,13 @@ const { cropStoryboard } = require('./crop');
 const prompt = require('./prompt');
 const runner = require('./runner');
 const pipeline = require('./pipeline');
+const autoprompt = require('./autoprompt');
+const vo = require('./vo');
 
 const app = express();
 const PORT = process.env.PORT || 4777;
+// Default hanya bisa dibuka dari Mac ini. HOST=0.0.0.0 untuk membuka ke jaringan (tidak disarankan).
+const HOST = process.env.HOST || '127.0.0.1';
 const upload = multer({ dest: path.join(store.DATA_DIR, 'tmp') });
 
 app.use(express.json({ limit: '5mb' }));
@@ -21,6 +25,22 @@ const rel = abs => path.relative(store.DATA_DIR, abs).split(path.sep).join('/');
 const wrap = fn => (req, res) => Promise.resolve().then(() => fn(req, res)).catch(e => res.status(400).json({ error: e.message }));
 
 // ---------- Series ----------
+// Pengaturan tambahan serial: gaya Claude, suara VO, subtitle tempel, judul & thumbnail otomatis.
+function applySeriesSettings(s, b) {
+  if (b.style && typeof b.style === 'object') {
+    s.style = {
+      dialog: Object.keys(autoprompt.STYLES).includes(b.style.dialog) ? b.style.dialog : '',
+      model: autoprompt.MODELS.includes(b.style.model) ? b.style.model : '',
+      notes: String(b.style.notes || '').slice(0, 600),
+    };
+  }
+  if (b.voices && typeof b.voices === 'object') s.voices = Object.fromEntries(Object.entries(b.voices).filter(([k, v]) => k && v).map(([k, v]) => [String(k).trim(), String(v).trim()]));
+  if (b.defaultVoice !== undefined) s.defaultVoice = String(b.defaultVoice || '').trim();
+  if (b.burnSubs !== undefined) s.burnSubs = !!b.burnSubs;
+  if (b.autoMeta !== undefined) s.autoMeta = !!b.autoMeta;
+}
+app.get('/api/options', (req, res) => res.json({ styles: Object.keys(autoprompt.STYLES), models: autoprompt.MODELS, voEnabled: vo.enabled() }));
+
 app.get('/api/state', (req, res) => res.json({ ...store.db, queue: pipeline.queue, runner: { running: runner.state.running, current: runner.state.current } }));
 
 // 1 drama = 1 akun Google: akun yang dipilih harus ada.
@@ -32,6 +52,7 @@ function checkAccount(id) {
 app.post('/api/series', wrap((req, res) => {
   const accountId = req.body.accountId ? checkAccount(req.body.accountId) : runner.activeAccount().id;
   const s = { id: store.id(), title: req.body.title || 'Serial baru', characters: req.body.characters || [], accountId, createdAt: Date.now() };
+  applySeriesSettings(s, req.body);
   store.db.series.push(s); store.save(); res.json(s);
   // Project Flow dibuat per episode saat episode mulai diproses.
 }));
@@ -48,6 +69,7 @@ app.put('/api/series/:id', wrap((req, res) => {
   const s = store.series(req.params.id); if (!s) throw new Error('Serial tidak ada');
   Object.assign(s, { title: req.body.title ?? s.title, characters: req.body.characters ?? s.characters });
   if (req.body.accountId && req.body.accountId !== s.accountId) s.accountId = checkAccount(req.body.accountId);
+  applySeriesSettings(s, req.body);
   store.save(); res.json(s);
 }));
 app.delete('/api/series/:id', wrap((req, res) => {
@@ -127,6 +149,13 @@ app.post('/api/episodes/:id/scenes/:n/frame', upload.single('file'), wrap((req, 
 app.put('/api/episodes/:id/scenes/:n', wrap((req, res) => {
   const sc = store.scene(req.params.id, req.params.n); if (!sc) throw new Error('Scene tidak ada');
   for (const k of ['title', 'setting', 'characters', 'shots', 'audio', 'avoid', 'customPrompt', 'fixLevel', 'status']) if (req.body[k] !== undefined) sc[k] = req.body[k];
+  // Potongan awal/akhir klip (detik). Kosong = otomatis.
+  for (const k of ['trimStart', 'trimEnd']) if (req.body[k] !== undefined) {
+    const v = req.body[k] === '' || req.body[k] === null ? null : Number(req.body[k]);
+    if (v !== null && (!Number.isFinite(v) || v < 0)) throw new Error('Potongan harus angka detik ≥ 0');
+    sc[k] = v;
+  }
+  if (sc.trimStart != null && sc.trimEnd != null && sc.trimEnd - sc.trimStart < 0.3) throw new Error('Potongan akhir harus lebih besar dari potongan awal');
   store.save(); res.json(sc);
 }));
 
@@ -169,6 +198,86 @@ app.post('/api/episodes/:id/merge', wrap(async (req, res) => {
   res.json(await pipeline.mergeEp(ep));
 }));
 
+// Generate ulang satu scene (hasil jelek tapi tidak error): video lama dilepas, versi baru dibuat,
+// diunduh, lalu episode digabung ulang.
+app.post('/api/episodes/:id/scenes/:n/redo', wrap((req, res) => {
+  const ep = store.episode(req.params.id); if (!ep) throw new Error('Episode tidak ada');
+  const sc = store.scene(ep.id, req.params.n); if (!sc) throw new Error('Scene tidak ada');
+  if (pipeline.isActive(ep.id)) throw new Error('Episode ini sedang diproses. Tunggu selesai dulu.');
+  if (req.body && req.body.fromLevel0) sc.fixLevel = 0;
+  sc.version = (sc.version || 1) + 1;
+  sc.clip = null; sc.flowName = null; sc.status = 'draft'; sc.lastError = null;
+  ep.output = null; ep.meta = null;
+  store.save();
+  res.json(pipeline.start(ep.id, { resume: true, onlyScenes: [sc.n] }));
+}));
+
+// Buat ulang judul, deskripsi, hashtag, dan thumbnail.
+app.post('/api/episodes/:id/meta', wrap(async (req, res) => {
+  const ep = store.episode(req.params.id); if (!ep) throw new Error('Episode tidak ada');
+  res.json(await pipeline.makeMeta(ep));
+}));
+
+// Aturan perbaikan: Claude mengusulkan kata baru dari prompt yang pernah ditolak; pengguna memilih mana yang dipakai.
+function recentFailures(limit = 15) {
+  const out = [];
+  for (const ep of store.db.episodes) for (const sc of ep.scenes) for (const a of sc.attempts || [])
+    if (a.result === 'policy' || a.result === 'audio') out.push({ at: a.at, error: a.error, level: a.level, prompt: a.prompt });
+  return out.sort((a, b) => String(b.at).localeCompare(String(a.at))).slice(0, limit);
+}
+app.post('/api/rules/suggest', wrap(async (req, res) => {
+  const fails = recentFailures();
+  if (!fails.length) throw new Error('Belum ada prompt yang ditolak Flow. Usulan bisa dibuat setelah ada kegagalan.');
+  res.json({ ...(await autoprompt.suggestRules(fails, prompt.loadRules(), store.DATA_DIR)), basedOn: fails.length });
+}));
+app.post('/api/rules/apply', wrap((req, res) => {
+  const file = path.join(__dirname, '..', 'config', 'fix-rules.json');
+  const rules = JSON.parse(fs.readFileSync(file, 'utf8'));
+  const escRe = t => String(t).replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  const have = new Set(rules.replacements.map(r => String(r[0]).toLowerCase()));
+  let added = 0;
+  for (const r of req.body.replacements || []) {
+    if (!Array.isArray(r) || !r[0] || typeof r[1] !== 'string') continue;
+    const from = escRe(String(r[0]).toLowerCase());
+    if (have.has(from)) continue;
+    rules.replacements.push([from, r[1]]); have.add(from); added++;
+  }
+  const risky = new Set(rules.riskyDialogueWords.map(w => w.toLowerCase()));
+  for (const w of req.body.riskyDialogueWords || []) { const x = String(w).toLowerCase().trim(); if (x && !risky.has(x)) { rules.riskyDialogueWords.push(x); risky.add(x); added++; } }
+  fs.writeFileSync(file, JSON.stringify(rules, null, 2) + '\n');
+  res.json({ added });
+}));
+
+// Statistik: percobaan, kegagalan per jenis, tingkat tertinggi, perkiraan kredit terpakai.
+app.get('/api/stats', (req, res) => {
+  const blank = () => ({ episodes: 0, scenes: 0, scenesDone: 0, attempts: 0, ok: 0, policy: 0, audio: 0, timeout: 0, credits: 0, error: 0, maxLevel: 0, needsVO: 0, generations: 0 });
+  const add = (t, ep) => {
+    t.episodes++;
+    for (const sc of ep.scenes) {
+      t.scenes++; if (sc.clip) t.scenesDone++;
+      t.needsVO += (sc.needsVO || []).length;
+      for (const a of sc.attempts || []) {
+        t.attempts++;
+        const k = ['ok', 'policy', 'audio', 'timeout', 'credits'].includes(a.result) ? a.result : 'error';
+        t[k]++;
+        if (k !== 'error') t.generations++; // prompt benar-benar terkirim ke Flow
+        t.maxLevel = Math.max(t.maxLevel, a.level || 0);
+      }
+    }
+  };
+  const total = blank();
+  const series = store.db.series.map(s => {
+    const t = blank();
+    const eps = store.db.episodes.filter(e => e.seriesId === s.id);
+    eps.forEach(e => { add(t, e); add(total, e); });
+    const episodes = eps.map(e => { const x = blank(); add(x, e); return { id: e.id, title: e.title, ...x }; });
+    return { id: s.id, title: s.title, ...t, list: episodes };
+  });
+  const errors = {};
+  for (const ep of store.db.episodes) for (const sc of ep.scenes) for (const a of sc.attempts || []) if (a.error) errors[a.error] = (errors[a.error] || 0) + 1;
+  res.json({ total, series, topErrors: Object.entries(errors).sort((a, b) => b[1] - a[1]).slice(0, 8) });
+});
+
 // ---------- Runner ----------
 // Akun Google Flow (profil Chrome terpisah per akun).
 app.get('/api/accounts', (req, res) => { const active = runner.activeAccount().id; res.json({ accounts: store.db.accounts, active }); });
@@ -193,8 +302,8 @@ app.post('/api/open-flow', wrap(async (req, res) => {
 app.get('/api/log', (req, res) => res.json({ log: runner.state.log.slice(-150), running: runner.state.running, current: runner.state.current }));
 app.get('/api/rules', (req, res) => res.json(prompt.loadRules()));
 
-app.listen(PORT, () => {
-  console.log(`\n  Flow Drama Studio jalan di  http://localhost:${PORT}\n`);
+app.listen(PORT, HOST, () => {
+  console.log(`\n  Flow Drama Studio jalan di  http://localhost:${PORT}${HOST === '127.0.0.1' ? '' : `  (terbuka di ${HOST})`}\n`);
 });
 
 process.on('SIGINT', async () => { store.saveNow(); await runner.close(); process.exit(0); });
